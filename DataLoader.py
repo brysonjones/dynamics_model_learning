@@ -1,5 +1,6 @@
 import os
 import pandas as pd
+import math as m
 
 class DataLoader(object):
 
@@ -68,11 +69,41 @@ class DataLoader(object):
     def get_control_inputs(self):
         # rpm_dot = k*(mot_des - mot_curr)
         # rpm_dot / k + mot_curr = mot_des
+        return None
+
+    def estimate_motor_constant(self, motor_power):
+        # 4 props producing max thrust of 33N (from paper)
+        # 33N is ~3365g (gram-force, units on datasheet)
+
+        # given that^ and datasheet found here:
+        # https://www.hobbywingdirect.com/products/xrotor-2306-motor
+        # they are most likely using
+
+        # T0 = cube_root(P^2 * eff_prop^2 * eff_el^2 * pi * d_p^2/2 * rho)
+
+        # guesstimates
+        eff_prop = 0.9 # prop efficiency
+        eff_el = 0.95  # prop diameter
+
+        # from paper
+        d_p = 5 * 0.0254 # convert 5" to m
+        rho = 1.225 #density of air in kg/m^3
+
+        T0 = 4 * m.sqrt(motor_power * eff_prop**2 * eff_el**2 * m.pi * d_p**2/2 * rho)
+
+        #  k = peak_torque / sqrt(power input)
+        #  k = T_peak / sqrt(i*V)
+        #  T_peak [Nm] = 9.5488 * power [kW] / speed [RPM]
+
+        return T0
+
+
 
 
 if __name__ == '__main__':
     DL = DataLoader("processed_data/")
-    DL.load_easy_data()
-    print(DL.get_column_names())
-    test = DL.get_state_data()
-    print(test.shape)
+    print(DL.estimate_motor_constant(1200))
+    # DL.load_easy_data()
+    # print(DL.get_column_names())
+    # test = DL.get_state_data()
+    # print(test.shape)
