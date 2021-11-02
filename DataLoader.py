@@ -8,6 +8,15 @@ class DataLoader(object):
         self.data = None #stores pandas dataframes
         self.selected_data = None #just filenames to be loaded in (see self.load_selected_data())
 
+        self.state_columns = ['ang acc x', 'ang acc y', 'ang acc z', 'ang vel x', 'ang vel y',
+                            'ang vel z', 'quat x', 'quat y', 'quat z', 'quat w', 'acc x', 'acc y',
+                            'acc z', 'vel x', 'vel y', 'vel z', 'pos x', 'pos y', 'pos z', 'mot 1',
+                            'mot 2', 'mot 3', 'mot 4']
+
+        self.motor_speed_columns = ['mot1', 'mot 2', 'mot 3', 'mot 4']
+        self.motor_derivative_columns = ['dmot 1', 'dmot 2', 'dmot 3', 'dmot 4']
+
+
         # types of flights from labels online
         self.short_circles = ['2021-02-05-14-00-56', '2021-02-05-14-01-47', '2021-02-05-14-02-47', '2021-02-05-14-03-41', '2021-02-05-14-04-32',
                               '2021-02-05-16-16-00', '2021-02-05-16-19-10']
@@ -49,8 +58,21 @@ class DataLoader(object):
                 else:
                     self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
 
+    def get_time_values(self):
+        return self.data['t'].values
+
+    def get_state_data(self):
+        # indexes columns
+        return self.data[self.state_columns].values
+
+    def get_control_inputs(self):
+        # rpm_dot = k*(mot_des - mot_curr)
+        # rpm_dot / k + mot_curr = mot_des
+
 
 if __name__ == '__main__':
     DL = DataLoader("processed_data/")
     DL.load_easy_data()
     print(DL.get_column_names())
+    test = DL.get_state_data()
+    print(test.shape)
