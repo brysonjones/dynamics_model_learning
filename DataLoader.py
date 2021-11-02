@@ -16,7 +16,9 @@ class DataLoader(object):
 
         self.motor_speed_columns = ['mot1', 'mot 2', 'mot 3', 'mot 4']
         self.motor_derivative_columns = ['dmot 1', 'dmot 2', 'dmot 3', 'dmot 4']
-
+        self.rpm_dot_constant = 36.5 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
+        # got this from a project I did last year, not sure how to estimate this
+        # pretty much indicates how quickly you can change motor current over time
 
         # types of flights from labels online
         self.short_circles = ['2021-02-05-14-00-56', '2021-02-05-14-01-47', '2021-02-05-14-02-47', '2021-02-05-14-03-41', '2021-02-05-14-04-32',
@@ -71,38 +73,30 @@ class DataLoader(object):
         # rpm_dot / k + mot_curr = mot_des
         return None
 
-    def estimate_motor_constant(self, motor_power):
+    # ~~~ DEPRECATED ~~~
+    def estimate_motor_constant(self):
         # 4 props producing max thrust of 33N (from paper)
         # 33N is ~3365g (gram-force, units on datasheet)
 
         # given that^ and datasheet found here:
         # https://www.hobbywingdirect.com/products/xrotor-2306-motor
-        # they are most likely using
+        # they are most likely using 1600 kV model and not exceeding 50% acclerator
+        # this means max RPM of 20408 and max power of 330.5 W
 
-        # T0 = cube_root(P^2 * eff_prop^2 * eff_el^2 * pi * d_p^2/2 * rho)
 
-        # guesstimates
-        eff_prop = 0.9 # prop efficiency
-        eff_el = 0.95  # prop diameter
+        #  k = peak_torque [Nm] / sqrt(power input [W])
+        #  T_peak [Nm] = 9550 * power [kW] / speed [RPM]
+        # T_peak = 9550 * 0.3305 / 20408
+        # k = T_peak / m.sqrt(330.5)
 
-        # from paper
-        d_p = 5 * 0.0254 # convert 5" to m
-        rho = 1.225 #density of air in kg/m^3
-
-        T0 = 4 * m.sqrt(motor_power * eff_prop**2 * eff_el**2 * m.pi * d_p**2/2 * rho)
-
-        #  k = peak_torque / sqrt(power input)
-        #  k = T_peak / sqrt(i*V)
-        #  T_peak [Nm] = 9.5488 * power [kW] / speed [RPM]
-
-        return T0
+        return k
 
 
 
 
 if __name__ == '__main__':
     DL = DataLoader("processed_data/")
-    print(DL.estimate_motor_constant(1200))
+    print(DL.estimate_motor_constant())
     # DL.load_easy_data()
     # print(DL.get_column_names())
     # test = DL.get_state_data()
