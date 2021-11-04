@@ -99,4 +99,76 @@ def animateState(timeVec, stateMatrix, name='test'):
     for f in glob.glob(searchName):
         os.remove(f)
         
+def visualize(timeVec, stateMatrix, name='test'):
+    # Plots in 3 Dimensions
+    x = stateMatrix[0]
+    y = stateMatrix[1]
+    z = stateMatrix[2]
 
+    dataLen = len(x)
+
+    maxFrames = 100;
+    numFrames = min(maxFrames, dataLen)
+    frameSep = math.floor(dataLen/numFrames)
+
+
+    #Set up the plotting axis
+    plt.ion()
+    plt.show()
+    fig = plt.figure(1, figsize=(5,8))
+    spec = gridspec.GridSpec(ncols=1, nrows=4, height_ratios=[3, 1, 1, 1])
+    ax0 = fig.add_subplot(spec[0], projection='3d')
+    ax1 = fig.add_subplot(spec[1])
+    ax2 = fig.add_subplot(spec[2])
+    ax3 = fig.add_subplot(spec[3])
+    
+    for ii in range(numFrames):
+        #Find the new end index
+        maxInd = (ii + 1) * frameSep - 1
+        
+        #Do new plotting
+        ax0.clear()
+        ax1.clear()
+        ax2.clear()
+        ax3.clear()
+        
+        #Make our plot with subplots below
+        ax0.plot3D(x[:maxInd+1], y[:maxInd+1], z[:maxInd+1], 'g')
+        ax0.plot3D(x[maxInd], y[maxInd], z[maxInd], 'or')
+        ax0.set_xlabel('x (m)')
+        ax0.set_ylabel('y (m)')
+        ax0.set_zlabel('Alt (m)')
+        ax0.set_title('Quadcopter Trajectory')
+
+        ax1.plot(timeVec[:maxInd+1], x[:maxInd+1], 'g')
+        ax1.plot(timeVec[maxInd],    x[maxInd], 'or')
+        ax1.set_xlabel('t (sec)')
+        ax1.set_ylabel('x (m)')
+
+        ax2.plot(timeVec[:maxInd+1], y[:maxInd+1], 'g')
+        ax2.plot(timeVec[maxInd],    y[maxInd], 'or')
+        ax2.set_xlabel('t (sec)')
+        ax2.set_ylabel('y (m)')
+
+        ax3.plot(timeVec[:maxInd+1], z[:maxInd+1], 'g')
+        ax3.plot(timeVec[maxInd],    z[maxInd], 'or')
+        ax3.set_xlabel('t (sec)')
+        ax3.set_ylabel('Alt (m)')
+
+        #And the plotting and saving stuff
+        plt.draw()
+        plt.pause(0.001)
+        fileName = name+'_vistmp_%03d.png' % ii
+        plt.savefig(fileName)
+
+    #Now we need to assemble them into a gif
+    searchName = name+'_vistmp_*.png'
+    img, *imgs = [Image.open(f) for f in sorted(glob.glob(searchName))]
+    img.save(fp=name+'.gif', format='GIF', append_images=imgs,
+             save_all=True, duration=50, loop=0)
+
+    #Also, save the last one. We may actually want it alone
+    plt.savefig(name+'_states.png')
+    #And delete all the images
+    for f in glob.glob(searchName):
+        os.remove(f)

@@ -1,9 +1,10 @@
 import sys
 import numpy as np
 #Set up environment
-sys.path.append(r"D:\Documents\2021\CMU\03fall\16715_RobotDynamics\project\python")
+sys.path.append('.')
 from visTool import plotState
 from visTool import animateState
+from visTool import visualize
 
 #Set up variables
 zline = np.linspace(0,15,1000)
@@ -14,5 +15,6 @@ c = [zline, xline, yline]
 
 timeVec = zline
 
-plotState(timeVec, c)
-animateState(timeVec, c)
+#plotState(timeVec, c)
+#animateState(timeVec, c)
+visualize(timeVec, c)
