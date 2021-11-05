@@ -84,13 +84,3 @@ class DataLoader(object):
 
     def get_battery_voltage_data(self):
         return self.data['vbat'].values
-
-if __name__ == '__main__':
-    DL = DataLoader("processed_data/")
-    DL.load_easy_data()
-    print(DL.get_column_names())
-
-    rpm_vals = DL.get_control_inputs()
-    rpm_des_vals = DL.get_des_rpm_values()
-    print(np.max(rpm_vals), np.min(rpm_vals))
-    print(np.max(rpm_des_vals), np.min(rpm_des_vals))
