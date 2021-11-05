@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 import math as m
+import numpy as np
 
 class DataLoader(object):
 
@@ -14,11 +15,10 @@ class DataLoader(object):
                             'acc z', 'vel x', 'vel y', 'vel z', 'pos x', 'pos y', 'pos z', 'mot 1',
                             'mot 2', 'mot 3', 'mot 4']
 
-        self.motor_speed_columns = ['mot1', 'mot 2', 'mot 3', 'mot 4']
+        self.motor_speed_columns = ['mot 1', 'mot 2', 'mot 3', 'mot 4']
         self.motor_derivative_columns = ['dmot 1', 'dmot 2', 'dmot 3', 'dmot 4']
-        self.rpm_dot_constant = 36.5 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
-        # got this from a project I did last year, not sure how to estimate this
-        # pretty much indicates how quickly you can change motor current over time
+        self.motor_time_constant = 1 / 0.033 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
+        # this is from page 7 of the NeuroBEM paper
 
         # types of flights from labels online
         self.short_circles = ['2021-02-05-14-00-56', '2021-02-05-14-01-47', '2021-02-05-14-02-47', '2021-02-05-14-03-41', '2021-02-05-14-04-32',
@@ -51,8 +51,16 @@ class DataLoader(object):
 
 
     def load_selected_data(self):
+        if self.selected_data is None:
+            print("ERROR: you must set DataLoader.selected_data equal to a list of the files \
+                   you want to load data from before calling this function!")
+            return None
+
         self.data = None
         flights = [f for f in os.listdir(self.data_path) if os.path.isfile(os.path.join(self.data_path, f))]
+
+        if len(flights) == 0:
+            print("ERROR! No csv files found with the names provided: \n", self.selected_data)
 
         for f in flights:
             if f[7:-10] in self.selected_data:
@@ -69,35 +77,26 @@ class DataLoader(object):
         return self.data[self.state_columns].values
 
     def get_control_inputs(self):
-        # rpm_dot = k*(mot_des - mot_curr)
-        # rpm_dot / k + mot_curr = mot_des
-        return None
+        return self.data[self.motor_speed_columns].values
 
-    # ~~~ DEPRECATED ~~~
-    def estimate_motor_constant(self):
-        # 4 props producing max thrust of 33N (from paper)
-        # 33N is ~3365g (gram-force, units on datasheet)
+    def get_des_rpm_values(self):
+        dt = 0.001 # [sec] (1 kHz)
+        rpm_dot_vals = (np.diff(self.data[self.motor_speed_columns].values, axis=0)) / dt
+        # copy last time step so rpm_dot_vals is same length as data
+        rpm_dot_vals = np.vstack([rpm_dot_vals, rpm_dot_vals[-1,:]])
 
-        # given that^ and datasheet found here:
-        # https://www.hobbywingdirect.com/products/xrotor-2306-motor
-        # they are most likely using 1600 kV model and not exceeding 50% acclerator
-        # this means max RPM of 20408 and max power of 330.5 W
-
-
-        #  k = peak_torque [Nm] / sqrt(power input [W])
-        #  T_peak [Nm] = 9550 * power [kW] / speed [RPM]
-        # T_peak = 9550 * 0.3305 / 20408
-        # k = T_peak / m.sqrt(330.5)
-
-        return k
-
-
+        return rpm_dot_vals / self.motor_time_constant + self.data[self.motor_speed_columns].values
 
 
 if __name__ == '__main__':
     DL = DataLoader("processed_data/")
-    print(DL.estimate_motor_constant())
-    # DL.load_easy_data()
-    # print(DL.get_column_names())
+    DL.load_easy_data()
+    print(DL.get_column_names())
     # test = DL.get_state_data()
     # print(test.shape)
+    print(DL.get_des_rpm_values().shape)
+    print("testing ==================")
+
+    a = np.array([[1, 2, 3, 4, 5], [2, 4, 6, 8, 10]])
+    print(a.shape)
+    print(np.diff(a, axis=0))
