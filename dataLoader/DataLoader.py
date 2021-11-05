@@ -45,25 +45,20 @@ class DataLoader(object):
                 else:
                     self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
 
-
     def get_column_names(self):
-        return self.data.keys()
+        return self.data.keys().values
 
-
-    def load_selected_data(self):
-        if self.selected_data is None:
-            print("ERROR: you must set DataLoader.selected_data equal to a list of the files \
-                   you want to load data from before calling this function!")
-            return None
+    def load_selected_data(self, selected_data):
+        self.selected_data = selected_data
 
         self.data = None
         flights = [f for f in os.listdir(self.data_path) if os.path.isfile(os.path.join(self.data_path, f))]
 
         if len(flights) == 0:
-            print("ERROR! No csv files found with the names provided: \n", self.selected_data)
+            print("ERROR! No csv files found with the names provided: \n", selected_data)
 
         for f in flights:
-            if f[7:-10] in self.selected_data:
+            if f[7:-10] in selected_data:
                 if self.data is None:
                     self.data = pd.read_csv(os.path.join(self.data_path, f))
                 else:
@@ -87,16 +82,15 @@ class DataLoader(object):
 
         return rpm_dot_vals / self.motor_time_constant + self.data[self.motor_speed_columns].values
 
+    def get_battery_voltage_data(self):
+        return self.data['vbat'].values
 
 if __name__ == '__main__':
     DL = DataLoader("processed_data/")
     DL.load_easy_data()
     print(DL.get_column_names())
-    # test = DL.get_state_data()
-    # print(test.shape)
-    print(DL.get_des_rpm_values().shape)
-    print("testing ==================")
 
-    a = np.array([[1, 2, 3, 4, 5], [2, 4, 6, 8, 10]])
-    print(a.shape)
-    print(np.diff(a, axis=0))
+    rpm_vals = DL.get_control_inputs()
+    rpm_des_vals = DL.get_des_rpm_values()
+    print(np.max(rpm_vals), np.min(rpm_vals))
+    print(np.max(rpm_des_vals), np.min(rpm_des_vals))
