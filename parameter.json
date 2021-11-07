@@ -1,8 +1,16 @@
 {
-  "mass": [[1, 0],
-           [0, 1]],
+  "mass": 0.752,
   "dimensions": {
 
+  },
+  "model":
+  {
+    "LNN":
+    {
+      "hyperparameters": {
+
+      }
+    }
   }
 
 }
