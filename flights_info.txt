@@ -1,0 +1,95 @@
+dataset = "2021-02-03-13-43-38";        % wobbly circle 4 parts, delta=0.3, vel=0.5
+dataset = "2021-02-03-13-44-49";        % wobbly circle 4 parts, delta=0.3, vel=0.75
+dataset = "2021-02-03-13-53-04";        % circle, vel=2.0
+dataset = "2021-02-03-13-54-06";        % circle, vel=2.5
+dataset = "2021-02-03-16-10-37";        % linear oscillation, vel=2.0
+dataset = "2021-02-03-16-12-22";        % linear oscillation, vel=2.25
+dataset = "2021-02-03-16-45-38";        % linear oscillation, vel=2.4
+dataset = "2021-02-03-16-47-27";        % wobbly circle 9 parts, delta=0.15, vel=0.25
+dataset = "2021-02-03-16-54-28";        % linear oscillation, vel=2.6
+dataset = "2021-02-03-16-55-55";        % wobbly circle 9 parts, delta=0.15, vel=0.5
+dataset = "2021-02-03-16-58-13";        % 3d circle, delta_z = 2, vel=1.5
+dataset = "2021-02-03-17-04-15";        % 3d circle, delta_z = 4, vel=2
+dataset = "2021-02-03-17-06-36";        % 3d circle, delta_z = 4, vel=2.5
+dataset = "2021-02-03-17-14-47";        % 3d circle, delta_z = 4, vel=2.9
+dataset = "2021-02-03-17-26-08";        % lemniscate
+dataset = "2021-02-03-17-33-11";        % circle, vel=2.75
+dataset = "2021-02-03-17-37-27";        % circle, vel=3.0
+dataset = "2021-02-05-14-00-56";        % battery test 01, short circle
+dataset = "2021-02-05-14-01-47";        % battery test 02, short circle
+dataset = "2021-02-05-14-02-47";        % battery test 03, short circle
+dataset = "2021-02-05-14-03-41";        % battery test 04, short circle
+dataset = "2021-02-05-14-04-32";        % battery test 05, short circle
+dataset = "2021-02-05-14-19-34";        % vertical oscillation, vel = 1
+dataset = "2021-02-05-14-24-35";        % vertical oscillation, vel = 1.7
+dataset = "2021-02-05-15-04-42";        % 3d circle, vel = 0.45
+dataset = "2021-02-05-15-40-15";        % cpc, 1.65 TWR, offset z + 0.7m
+dataset = "2021-02-05-15-46-49";        % cpc, 2.475 TWR, offset z + 0.7m
+dataset = "2021-02-05-15-56-24";        % cpc, 2.75 TWR, offset z + 0.7m
+dataset = "2021-02-05-15-58-59";        % lemniscate, vel = 1
+dataset = "2021-02-05-16-06-45";        % lemniscate, vel = 1.5
+dataset = "2021-02-05-16-10-53";        % lemniscate, vel = 1.75
+dataset = "2021-02-05-16-14-20";        % lemniscate, vel = 2
+dataset = "2021-02-05-16-16-00";        % battery test 06, short circle
+dataset = "2021-02-05-16-19-10";        % battery test 08, short circle
+dataset = "2021-02-05-16-29-21";        % cpc, 2.475 TWR, offset z + 0.7m
+dataset = "2021-02-05-16-31-14";        % cpc, 2.475 TWR, offset z + 0.7m
+dataset = "2021-02-05-16-33-13";        % battery test 09, short circle
+dataset = "2021-02-18-13-44-23";        % 3d circle, delta_z = 4, vel=2
+dataset = "2021-02-18-14-15-53";        % 3d circle, delta_z = 4, vel=2.9
+dataset = "2021-02-18-15-47-24";        % 3d circle, delta_z = 4, vel=2.9
+dataset = "2021-02-18-16-08-00";        % 3d circle, delta_z = 4, vel=2.9, ccw
+dataset = "2021-02-18-16-31-30";        % 3d circle, delta_z = 4, vel=2.9, ccw
+dataset = "2021-02-18-16-41-41";        % linear oscillation, vel=2.0
+dataset = "2021-02-18-16-43-54";        % linear oscillation, vel=2.0
+dataset = "2021-02-18-16-47-02";        % linear oscillation, vel=2.25
+dataset = "2021-02-18-16-48-24";        % linear oscillation, vel=2.25
+dataset = "2021-02-18-16-53-35";        % linear oscillation, vel=2.4
+dataset = "2021-02-18-16-55-00";        % linear oscillation, vel=2.4
+dataset = "2021-02-18-17-03-20";        % lemniscate, vel = 1
+dataset = "2021-02-18-17-05-14";        % lemniscate, vel = 1.5
+dataset = "2021-02-18-17-06-27";        % lemniscate, vel = 1.5
+dataset = "2021-02-18-17-09-50";        % lemniscate, vel = 2
+dataset = "2021-02-18-17-12-03";        % lemniscate, vel = 1.75
+dataset = "2021-02-18-17-19-08";        % cpc, 1.65 TWR, offset z + 0.7m
+dataset = "2021-02-18-17-20-37";        % cpc, 2.475 TWR, offset z + 0.7m
+dataset = "2021-02-18-17-26-00";        % cpc, 2.475 TWR, offset z + 0.7m
+dataset = "2021-02-18-17-28-35";        % cpc, 2.75 TWR, offset z + 0.7m
+dataset = "2021-02-18-17-42-11";        % 3d circle ccw, radius = 3, vel = 3.25
+dataset = "2021-02-18-17-44-17";        % 3d circle, radius = 3, vel = 3.25
+dataset = "2021-02-18-17-47-42";        % 3d circle ccw, radius = 3.5, vel = 3.25
+dataset = "2021-02-18-17-48-50";        % 3d circle, radius = 3.5, vel = 3.25
+dataset = "2021-02-18-18-02-03";        % 3d circle ccw, radius = 4, vel = 3
+dataset = "2021-02-18-18-03-06";        % 3d circle, radius = 4, vel = 3
+dataset = "2021-02-18-18-08-45";        % 3d circle ccw, radius = 4.5, vel = 2.75
+dataset = "2021-02-18-18-09-47";        % 3d circle, radius = 4.5, vel = 2.75
+dataset = "2021-02-23-10-43-02";        % lemniscate, vel = 0.35, r=7.5m, ccw, full battery
+dataset = "2021-02-23-10-48-03";        % lemniscate, vel = 0.35, r=7.5m, full battery
+dataset = "2021-02-23-10-50-42";        % lemniscate, vel = 1.0, r=7.5m, ccw
+dataset = "2021-02-23-10-52-00";        % lemniscate, vel = 1.0, r=7.5m,
+dataset = "2021-02-23-11-31-23";        % random points 1, slow
+dataset = "2021-02-23-11-41-38";        % satellite, slow, full battery
+dataset = "2021-02-23-14-21-48";        % lemniscate, vel = 1.4, r=7.5m, ccw, full battery
+dataset = "2021-02-23-14-24-07";        % lemniscate, vel = 1.4, r=7.5m,
+dataset = "2021-02-23-14-29-48";        % lemniscate, vel = 1.6, r=7.5m, ccw, full battery, 20s
+dataset = "2021-02-23-14-33-04";        % lemniscate, vel = 1.6, r=7.5m, 20s
+dataset = "2021-02-23-14-41-07";        % lemniscate, vel = 1.7, r=7.5m, ccw, full battery, 20s
+dataset = "2021-02-23-17-27-24";        % lemniscate, vel = 1.6, r>7.5m, ccw, full battery, 20s
+dataset = "2021-02-23-17-35-26";        % lemniscate, vel = 1.6, r>7.5m, full battery, 20s
+dataset = "2021-02-23-17-45-47";        % random points 2, full battery
+dataset = "2021-02-23-18-38-21";        % random points 3, 80s
+dataset = "2021-02-23-18-43-00";        % random points 4, 100s
+dataset = "2021-02-23-18-50-03";        % random points 5, 120s
+dataset = "2021-02-23-19-04-50";        % random points 6, 120s
+dataset = "2021-02-23-19-15-11";        % random points 7, 120s, battery moved
+dataset = "2021-02-23-19-26-38";        % satellite x, medium, full battery
+dataset = "2021-02-23-19-33-29";        % satellite x, fast, full battery
+dataset = "2021-02-23-19-45-06";        % satellite x, fast, full battery, 60s
+dataset = "2021-02-23-21-52-14";        % satellite y, fast, full battery, 60s
+dataset = "2021-02-23-21-57-38";        % satellite y, fast, full battery, 60s
+dataset = "2021-02-23-22-03-52";        % random points 7, 120s
+dataset = "2021-02-23-22-19-12";        % satellite y, fast, full battery, 60s
+dataset = "2021-02-23-22-26-25";        % random points 8, 120s
+dataset = "2021-02-23-22-33-54";        % random points 9, 120s
+dataset = "2021-02-23-22-41-46";        % satellite x, fast, full battery, 60s
+dataset = "2021-02-23-22-54-17";        % ellipse, vel = 2.4, x=16m, y=12m
