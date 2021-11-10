@@ -11,9 +11,9 @@ import time
 
 def plotState(timeVec, stateMatrix, name='test'):
     # Plots in 3 Dimensions
-    x = stateMatrix[0]
-    y = stateMatrix[1]
-    z = stateMatrix[2]
+    x = stateMatrix[:,0]
+    y = stateMatrix[:,1]
+    z = stateMatrix[:,2]
 
     #Make our plot with subplots below
     fig = plt.figure(1, figsize=(5,8))
@@ -49,9 +49,9 @@ def plotState(timeVec, stateMatrix, name='test'):
     
 def animateState(timeVec, stateMatrix, name='test'):
     # Plots in 3 Dimensions
-    x = stateMatrix[0]
-    y = stateMatrix[1]
-    z = stateMatrix[2]
+    x = stateMatrix[:,0]
+    y = stateMatrix[:,1]
+    z = stateMatrix[:,2]
 
     dataLen = len(x)
 
@@ -101,16 +101,15 @@ def animateState(timeVec, stateMatrix, name='test'):
         
 def visualize(timeVec, stateMatrix, name='test'):
     # Plots in 3 Dimensions
-    x = stateMatrix[0]
-    y = stateMatrix[1]
-    z = stateMatrix[2]
-
+    x = stateMatrix[:,0]
+    y = stateMatrix[:,1]
+    z = stateMatrix[:,2]
+    
     dataLen = len(x)
 
     maxFrames = 100;
     numFrames = min(maxFrames, dataLen)
     frameSep = math.floor(dataLen/numFrames)
-
 
     #Set up the plotting axis
     plt.ion()

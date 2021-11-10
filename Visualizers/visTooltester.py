@@ -2,18 +2,20 @@ import sys
 import numpy as np
 #Set up environment
 sys.path.append('.')
+sys.path.append('..')
 from visTool import plotState
 from visTool import animateState
 from visTool import visualize
 
 #Set up variables
-zline = np.linspace(0,15,1000)
-xline = np.sin(zline)
-yline = np.cos(zline)
+sys.path.append("C:/Users/zvick/OneDrive/Documents/GitHub/dynamics_model_learning/dataLoader")
+from dataLoader.DataLoader import DataLoader
+DL = DataLoader("C:/Users/zvick/OneDrive/Documents/GitHub/dynamics_model_learning/dataset/processed_data")
 
-c = [zline, xline, yline]
-
-timeVec = zline
+DL.load_selected_data("2021-02-03-13-44-49")
+timeVec = DL.get_time_values()
+state   = DL.get_state_data()
+c       = state[:, 16:19]
 
 #plotState(timeVec, c)
 #animateState(timeVec, c)
