@@ -17,8 +17,12 @@ print("Control inputs (rpm values) array shape:\t", DL.get_control_inputs().shap
 print("Desired rpm values array shape:\t\t", DL.get_des_rpm_values().shape)
 print("State dot array size: ", DL.state_dot_values.shape)
 
-DL.saveData("test.npz")
+DL.saveData("simple_dataset.npz")
 
-test = DynamicsDataset(DL.get_state_data(), DL.get_control_inputs())
+tmp = np.load("test.npz")
+inputs = tmp["input"]
+outputs = tmp["output"]
+
+test = DynamicsDataset(DL.get_state_data(), DL.state_dot_values)
 print(test[0])
 print(len(test))

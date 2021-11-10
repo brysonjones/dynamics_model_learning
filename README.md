@@ -21,7 +21,7 @@ A repo for CMU's 16-715 Advanced Robot Dynamics course project
     - The state derivative can be accessed with: ``
   7. You can now train a network using this data, see dynamics_model_learning/model/train.py for an example on how to do that.
   8. (optional) Load the data into a torch.utils.data.Dataset function by doing:
-    `torchDatasetObject = DynamicsDataset(DL.get_state_data(),  DL.get_control_inputs())`
+    `torchDatasetObject = DynamicsDataset(DL.get_state_data(),  DL.state_dot_values)`
   9. (optional) Get chunks of the data as with the following functions:
       - `DL.get_column_names()` will return a list of the coumn names (i.e. state and input variables)
       - `DL.get_time_values()` returns [N] size numpy array of the time values for each data point

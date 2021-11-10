@@ -23,7 +23,7 @@ class DataLoader(object):
 
         self.motor_time_constant = 1 / 0.033 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
         # this is from page 7 of the NeuroBEM paper
-        
+
         self.state_columns = ['pos x', 'pos y', 'pos z', 'vel x', 'vel y', 'vel z', 'quat x',
                               'quat y', 'quat z', 'quat w', 'ang vel x', 'ang vel y',
                               'ang vel z', 'mot 1', 'mot 2', 'mot 3', 'mot 4']

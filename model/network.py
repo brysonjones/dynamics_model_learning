@@ -15,7 +15,8 @@ def get_model(args, D_in, D_out):
         hidden_list = [D_in, 512, 512, 512, 512, 512, 512]
         model = LagrangianNeuralNetwork(D_in, hidden_list, D_out)
     elif args.model == "BlackBox":
-        pass
+        print("made it!")
+        pass # TODO
     elif args.model == "NewtonEuler":
         pass
     else:
@@ -102,4 +103,3 @@ class FullyConnectedNetwork(torch.nn.Module):
         out = tmp
 
         return out
-
