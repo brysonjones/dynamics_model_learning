@@ -1,4 +1,4 @@
-from dataLoader.DataLoader import DataLoader
+from dataLoader.DataLoader import DataLoader, DynamicsDataset
 
 DL = DataLoader("processed_data/")
 
@@ -15,3 +15,8 @@ print("Time value array shape:\t", DL.get_time_values().shape)
 print("State data (including rpm values) array shape:\t", DL.get_state_data().shape)
 print("Control inputs (rpm values) array shape:\t", DL.get_control_inputs().shape)
 print("Desired rpm values array shape:\t\t", DL.get_des_rpm_values().shape)
+print("State dot array size: ", DL.state_dot_values.shape)
+
+DL.saveData("test.npz")
+
+# test = DynamicsDataset(DL.get_state_data(), DL.get_control_inputs())
