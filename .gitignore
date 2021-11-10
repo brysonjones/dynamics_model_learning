@@ -1,6 +1,8 @@
 # Project Specific files
 raw_data/
 processed_data/
+*.png
+*.gif
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
