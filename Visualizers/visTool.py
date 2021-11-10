@@ -141,16 +141,19 @@ def visualize(timeVec, stateMatrix, name='test'):
 
         ax1.plot(timeVec[:maxInd+1], x[:maxInd+1], 'g')
         ax1.plot(timeVec[maxInd],    x[maxInd], 'or')
+        ax1.set_ylim([min(x), max(x)])
         ax1.set_xlabel('t (sec)')
         ax1.set_ylabel('x (m)')
 
         ax2.plot(timeVec[:maxInd+1], y[:maxInd+1], 'g')
         ax2.plot(timeVec[maxInd],    y[maxInd], 'or')
+        ax2.set_ylim([min(y), max(y)])
         ax2.set_xlabel('t (sec)')
         ax2.set_ylabel('y (m)')
 
         ax3.plot(timeVec[:maxInd+1], z[:maxInd+1], 'g')
         ax3.plot(timeVec[maxInd],    z[maxInd], 'or')
+        ax3.set_ylim([min(z), max(z)])
         ax3.set_xlabel('t (sec)')
         ax3.set_ylabel('Alt (m)')
 

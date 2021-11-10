@@ -12,11 +12,11 @@ sys.path.append("C:/Users/zvick/OneDrive/Documents/GitHub/dynamics_model_learnin
 from dataLoader.DataLoader import DataLoader
 DL = DataLoader("C:/Users/zvick/OneDrive/Documents/GitHub/dynamics_model_learning/dataset/processed_data")
 
-DL.load_selected_data("2021-02-03-13-44-49")
+DL.load_selected_data('2021-02-05-14-00-56')#"2021-02-03-16-10-37")
 timeVec = DL.get_time_values()
 state   = DL.get_state_data()
 c       = state[:, 16:19]
 
 #plotState(timeVec, c)
 #animateState(timeVec, c)
-visualize(timeVec, c)
+visualize(timeVec, c, "ShortCircles")#"LinearOscillations")
