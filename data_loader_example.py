@@ -19,4 +19,6 @@ print("State dot array size: ", DL.state_dot_values.shape)
 
 DL.saveData("test.npz")
 
-# test = DynamicsDataset(DL.get_state_data(), DL.get_control_inputs())
+test = DynamicsDataset(DL.get_state_data(), DL.get_control_inputs())
+print(test[0])
+print(len(test))

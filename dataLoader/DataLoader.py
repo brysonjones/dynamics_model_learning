@@ -23,8 +23,7 @@ class DataLoader(object):
 
         self.motor_time_constant = 1 / 0.033 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
         # this is from page 7 of the NeuroBEM paper
-        self.H = np.vstack([np.zeros(3), np.eye(3)]) # constant matrix for quaternion math
-
+        
         self.state_columns = ['pos x', 'pos y', 'pos z', 'vel x', 'vel y', 'vel z', 'quat x',
                               'quat y', 'quat z', 'quat w', 'ang vel x', 'ang vel y',
                               'ang vel z', 'mot 1', 'mot 2', 'mot 3', 'mot 4']
@@ -100,7 +99,7 @@ class DataLoader(object):
         return self.data[self.motor_speed_columns].values
 
     def get_des_rpm_values(self):
-        dt = 0.001 # [sec] (1 kHz)
+        dt = 0.001 # [sec] (1 kHz, from paper)
         rpm_dot_vals = (np.diff(self.data[self.motor_speed_columns].values, axis=0)) / dt
         # copy last time step so rpm_dot_vals is same length as data
         rpm_dot_vals = np.vstack([rpm_dot_vals, rpm_dot_vals[-1,:]])
@@ -111,14 +110,11 @@ class DataLoader(object):
         return self.data['vbat'].values
 
     def calculate_state_dot_values(self):
-        # state_dot_columns = ['vel x', 'vel y', 'vel z', 'acc x', 'acc y', 'acc z', d_quat-x, d_quat-y, d_quat-z,
-                             # d_quat-w, 'ang acc x', 'ang acc y', 'ang acc z', 'dmot 1' 'dmot 2' 'dmot 3' 'dmot 4']
         self.state_dot_values = self.data[['vel x', 'vel y', 'vel z', 'acc x', 'acc y', 'acc z']].values
         quat_deriv_vals = []
 
         start = time.time()
         for i in range(self.length):
-            # quat_deriv_vals.append(0.5 * self.quat_L(self.data[['quat x', 'quat y', 'quat z', 'quat w']].values[i,:]) @ self.H @ self.data[['ang vel x', 'ang vel y', 'ang vel z']].values[i,:])
             quat_deriv_vals.append( self.quat_dot(self.data[['quat x', 'quat y', 'quat z', 'quat w']].values[i,:], self.data[['ang vel x', 'ang vel y', 'ang vel z']].values[i,:]) )
         self.state_dot_values = np.hstack([ self.state_dot_values, np.stack(quat_deriv_vals) ])
         print("Time to calculate quaternion derivatives: {0:0.2f} [sec]".format(time.time() - start))
@@ -135,6 +131,7 @@ class DataLoader(object):
         L[1:,0] = q[1:]
         L[1:,1:] = q[0]*np.eye(3) + q_vec_hat
 
+        # np.vstack term is H from the notes [0; I(3)]
         return 0.5 * L @ np.vstack([np.zeros(3), np.eye(3)]) @ w
 
     # hat operator for a length 3 vector
