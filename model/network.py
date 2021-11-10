@@ -42,7 +42,9 @@ class LagrangianNeuralNetwork(torch.nn.Module):
             self.model_layers.append(torch.nn.Softplus())
 
         # output layer
-        self.model_layers.append(torch.nn.Linear(hidden_list[-1], D_out))
+        lnn_output_size = 1  # output is always one from this network
+                             # because it is calculating system energy
+        self.model_layers.append(torch.nn.Linear(hidden_list[-1], lnn_output_size))
         self.model_layers.append(torch.nn.Softplus())
 
     def forward_nn(self, x):

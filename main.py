@@ -12,9 +12,9 @@ if __name__ == "__main__":
     args = simulation_args()
 
     input_size = 12  # number of state dimensions # TODO: generalize this for inputs
-    output_size = 1  # for all lagrangian systems, output should be just a scalar energy value
+    output_size = 12  # for all lagrangian systems, output should be just a scalar energy value
     model = get_model(args, input_size, output_size)
-    
+
     # perform main function
     if args.mode == "train":
         train_(args, model)
