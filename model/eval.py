@@ -59,7 +59,7 @@ def eval_(args, model):
         x, y = x.to(device), y.to(device)
 
         x = torch.squeeze(x)
-        y_pred = model.forward(x)
+        y_pred = model.forward(x.float())
         loss = loss_fcn(y_pred.unsqueeze(0), y.float())
         average_validation_loss += loss.detach().numpy()
 

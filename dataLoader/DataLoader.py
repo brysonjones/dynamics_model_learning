@@ -58,7 +58,6 @@ class DataLoader(object):
 
         self.length = self.data[self.state_columns].values.shape[0]
 
-        print("Calculating state derivatives... (note: this may take a while, estimate: {0:0.2f} [sec])".format(self.length / 800))
         self.calculate_state_dot_values()
 
     def get_column_names(self):
@@ -85,7 +84,6 @@ class DataLoader(object):
 
         self.length = self.data[self.state_columns].values.shape[0]
 
-        print("Calculating state derivatives... (note: this may take a while, estimate: {0:0.2f} [sec])".format(self.length / 800))
         self.calculate_state_dot_values()
 
     def get_time_values(self):
@@ -110,15 +108,7 @@ class DataLoader(object):
         return self.data['vbat'].values
 
     def calculate_state_dot_values(self):
-        self.state_dot_values = self.data[['vel x', 'vel y', 'vel z', 'acc x', 'acc y', 'acc z']].values
-        quat_deriv_vals = []
-
-        start = time.time()
-        for i in range(self.length):
-            quat_deriv_vals.append( self.quat_dot(self.data[['quat x', 'quat y', 'quat z', 'quat w']].values[i,:], self.data[['ang vel x', 'ang vel y', 'ang vel z']].values[i,:]) )
-        self.state_dot_values = np.hstack([ self.state_dot_values, np.stack(quat_deriv_vals) ])
-        print("Time to calculate quaternion derivatives: {0:0.2f} [sec]".format(time.time() - start))
-        self.state_dot_values = np.hstack([self.state_dot_values, self.data[['ang acc x', 'ang acc y', 'ang acc z', 'dmot 1', 'dmot 2', 'dmot 3', 'dmot 4']].values])
+        self.state_dot_values = self.data[['acc x', 'acc y', 'acc z', 'ang acc x', 'ang acc y', 'ang acc z']].values
 
     # L operator for quaternions that Zac covered in lec 7, used to calculate quaternion derivatives
     @staticmethod
@@ -140,7 +130,7 @@ class DataLoader(object):
         return np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
 
     def saveData(self, filePath):
-        np.savez(filePath, input=self.get_state_data(), output=self.state_dot_values, control_inputs=self.get_control_inputs())
+        np.savez(filePath, input=self.get_state_data(), labels=self.state_dot_values, control_inputs=self.get_control_inputs())
 
 class DynamicsDataset(torch.utils.data.Dataset):
 

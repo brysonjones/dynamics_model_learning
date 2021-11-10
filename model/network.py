@@ -3,7 +3,7 @@ import torch
 import sys
 sys.path.append("../dynamics")
 
-from lagrangian import *
+from dynamics.lagrangian import *
 
 def get_model(args, D_in, D_out):
 
@@ -15,8 +15,9 @@ def get_model(args, D_in, D_out):
         hidden_list = [D_in, 512, 512, 512, 512, 512, 512]
         model = LagrangianNeuralNetwork(D_in, hidden_list, D_out)
     elif args.model == "BlackBox":
-        print("made it!")
-        pass # TODO
+        # hidden_list = [D_in, 2*D_in, 4*D_in, 8*D_in, 4*D_in, 2*D_in]
+        hidden_list = [D_in, 512, 512, 512, 512, 512, 512]
+        model = FullyConnectedNetwork(D_in, hidden_list, D_out)
     elif args.model == "NewtonEuler":
         pass
     else:
@@ -79,12 +80,12 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.BatchNorm1d(hidden_list[0]))
+        # self.model_layers.append(torch.nn.BatchNorm1d(hidden_list[0]))
         self.model_layers.append(torch.nn.Softplus())
         # add all hiden layers
         for i in range(1, len(hidden_list)):
             self.model_layers.append(torch.nn.Linear(hidden_list[i-1], hidden_list[i]))
-            self.model_layers.append(torch.nn.BatchNorm1d(hidden_list[i]))
+            # self.model_layers.append(torch.nn.BatchNorm1d(hidden_list[i]))
             self.model_layers.append(torch.nn.Softplus())
 
         # output layer

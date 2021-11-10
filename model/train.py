@@ -83,7 +83,7 @@ def train_(args, model):
 
             x = torch.squeeze(x)
             with torch.cuda.amp.autocast():
-                y_pred = model.forward(x)
+                y_pred = model.forward(x.float())
                 loss = loss_fcn(y_pred.unsqueeze(0), y.float())
                 loss_data = pd.DataFrame(data=[loss.detach().numpy()],
                                          columns=["loss"])
