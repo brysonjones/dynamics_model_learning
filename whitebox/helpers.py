@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import math
 
 def getKt(stateMatrix, accz, mass):
     #Calculate kt using a linear regression
@@ -104,9 +105,22 @@ def getABJxx(stateVec, angAccVec, kt, sLen):
     quat  = stateVec[6:10]
     omega = stateVec[10:13]
     motor = stateVec[13:17]
+    
+    theta = math.pi/4
+    rotMat = np.zeros((3,3))
+    rotMat[0,0] = math.cos(theta)
+    rotMat[0,1] = -math.sin(theta)
+    rotMat[1,0] = math.sin(theta)
+    rotMat[1,1] = math.cos(theta)
+    rotMat[2,2] = 1
 
-    angAccX = angAccVec[0]
-    angAccY = angAccVec[1]
+    angAccVecPrincipal = rotMat @ angAccVec.reshape((3,1))
+    
+    angAccX = angAccVecPrincipal[0]
+    angAccY = angAccVecPrincipal[1]
+
+    omega = rotMat @ omega.reshape((3,1)) #need in principal axis
+    
     #Prep a
     #Comes from lines
     #w\dot_1 = 1/J_11*s*kt*(u2-u4) - w_2w_3
@@ -126,8 +140,8 @@ def getABJxx(stateVec, angAccVec, kt, sLen):
     #b = s*kt*(u2-u4)
     #b = s*kt*(u3-u1)
     
-    b1 = sLen * kt * (motor[1] - motor[3])
-    b2 = sLen * kt * (motor[2] - motor[0])
+    b1 = sLen * kt * (motor[3] - motor[0])
+    b2 = sLen * kt * (motor[2] - motor[1])
     
     return a1,b1, a2,b2
 
@@ -178,7 +192,7 @@ def getABkm(stateVec, angAccVec, Jzz):
     # -- b --   -------   a -------
     
     #Prep a
-    a = 1/Jzz * (motor[0] - motor[1] + motor[2] - motor[3])
+    a = 1/Jzz * (motor[0] - motor[1] - motor[2] + motor[3])
 
     #Prep the b terms
     #b = angAccZ
@@ -237,6 +251,14 @@ def doNewtEul(stateVec, mass, sLen, kt, km, J):
     acc = 1/mass * Fterm - crossTerm.reshape((3,1))
     
     #And angular acc
+    theta = math.pi/4
+    rotMat = np.zeros((3,3))
+    rotMat[0,0] = math.cos(theta)
+    rotMat[0,1] = -math.sin(theta)
+    rotMat[1,0] = math.sin(theta)
+    rotMat[1,1] = math.cos(theta)
+    rotMat[2,2] = 1
+    
     tauMat = np.zeros((3,4))
     tauMat[0,1] = sLen * kt
     tauMat[0,3] = -sLen * kt
