@@ -41,7 +41,7 @@ angAcc = np.concatenate((angaccx.reshape((-1,1)),
                          angaccz.reshape((-1,1))), axis=1)
 print('Calculating inertia matrix')
 Jxx = getJxx(state, angAcc, kt, sLen)
-print('Using Jxx = ' + str(jxx))
+print('Using Jxx = ' + str(Jxx))
 Jyy = Jxx
 Jzz = 2*Jxx
 J = np.diag([Jxx, Jyy, Jzz])
@@ -58,3 +58,4 @@ accPred, angAccPred = NewtEulPredict(state, mass, sLen, kt, km, J)
 totalAcc = np.concatenate((acc, angAcc), axis=1)
 totalNE = np.concatenate((accPred, angAccPred), axis=1)
 
+accCompare(timeVec, totalAcc, totalNE)

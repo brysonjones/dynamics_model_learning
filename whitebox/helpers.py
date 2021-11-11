@@ -6,14 +6,14 @@ def getKt(stateMatrix, accz, mass):
     
     #accz = a*kt + b
     #regression will be using a, accz-b
-    a, b = getABlooper(stateMatrix, mass)
+    a, b = getABlooperKt(stateMatrix, mass)
     otherSide = accz.reshape((-1,1)) - b #column vecs
     
     kt, _, _, _ = np.linalg.lstsq(a, otherSide, rcond=-1)
 
     return kt[0,0] #the coefficient
     
-def getABlooper(stateMatrix, mass):
+def getABlooperKt(stateMatrix, mass):
     #Run through all sets and find the a and b values
 
     numRows = stateMatrix.shape[0]
@@ -24,14 +24,14 @@ def getABlooper(stateMatrix, mass):
     
     for ii in range(0, numRows):
         thisState = stateMatrix[ii, :]
-        a,b = getAB(thisState, mass)
+        a,b = getABkt(thisState, mass)
         aVec[ii] = a
         bVec[ii] = b
 
     #and return
     return aVec, bVec
 
-def getAB(stateVec, mass):
+def getABkt(stateVec, mass):
     #Do the actual calculations
     
     #Extract the inputs
@@ -135,7 +135,7 @@ def getKm(stateMatrix, angAcc, Jzz):
     #Performs a regression to get Jxx value for inertia matrix
     # assumes Jxx = Jyy = 1/2 Jzz
     
-    a, b = getABlooperJxx(stateMatrix, angAcc, Jzz)
+    a, b = getABlooperKm(stateMatrix, angAcc, Jzz)
 
     #solving for a*J_11 = b
     km, _, _, _ = np.linalg.lstsq(a, b, rcond=-1)
