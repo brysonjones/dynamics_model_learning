@@ -3,6 +3,8 @@ raw_data/
 processed_data/
 *.png
 *.gif
+*.pth
+*.npz
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
