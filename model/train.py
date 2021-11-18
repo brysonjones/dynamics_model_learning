@@ -17,38 +17,22 @@ import torch.utils.data
 import pandas as pd
 
 
-def train_(args, model):
+def train_(args, model, hyperparams, dataloader):
     print("--- Starting Main Training Loop! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
 
-    # import data
-    print("--- Loading training data... ---")
-    train_data = np.load('train_dataset.npz')
-    train_inputs = train_data["input"]
-    train_labels = train_data["labels"]
-
-    # load into PyTorch Dataset and Dataloader
-    train_dataset = DynamicsDataset(train_inputs, train_labels)
-
-    train_dataloader = torch.utils.data.DataLoader(train_dataset,
-                                                     batch_size=1,
-                                                     shuffle=True,
-                                                     collate_fn=DynamicsDataset.collate_fn,
-                                                     pin_memory=True,
-                                                     num_workers=1)
-
     # set up training parameters
-    learning_rate = 1e-5
-    weight_decay = 1e-6
-    num_epochs = 50
+    learning_rate = hyperparams["learning_rate"]
+    weight_decay = hyperparams["weight_decay"]
+    num_epochs = hyperparams["num_epochs"]
     optimizer = torch.optim.Adam(model.parameters(),
                                  lr=learning_rate,
                                  weight_decay=weight_decay)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, 1, gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.3)
 
     if os.path.isfile("model_weights.pth"):
         print("Re-loading existing weights!")
@@ -75,7 +59,7 @@ def train_(args, model):
 
         print("Epoch #", epoch)
 
-        for batch_idx, (x, y) in enumerate(train_dataloader):
+        for batch_idx, (x, y) in enumerate(dataloader):
             x, y = x.to(device), y.to(device)
 
             optimizer.zero_grad()
