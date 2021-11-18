@@ -174,3 +174,24 @@ def visualize(timeVec, stateMatrix, name='test'):
     #And delete all the images
     for f in glob.glob(searchName):
         os.remove(f)
+
+def accCompare(timeVec, accSet1, accSet2, runName='test', accTypeName='test'):
+    # Plot the accels to compare
+    lineNames = ['acc x', 'acc y', 'acc z', 'ang acc x', 'ang acc y', 'ang acc z']
+
+    #Make our plot with subplots below
+    fig = plt.figure(1, figsize=(10,9))
+    spec = gridspec.GridSpec(ncols=3, nrows=2)
+    for ii in range(0, 6):
+        ax = fig.add_subplot(spec[ii])
+        ax.plot(timeVec, accSet1[:,ii], 'k--')
+        ax.plot(timeVec, accSet2[:,ii], 'g')
+        ax.set_xlabel('time (s)')
+        ax.set_ylabel('acc val')
+        ax.set_title(lineNames[ii])
+
+    
+    fileName = runName+'_accCompare_'+accTypeName+'.png'
+    plt.savefig(fileName)
+    plt.show()
+    
