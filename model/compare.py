@@ -8,10 +8,12 @@ import os
 import sys
 sys.path.append("")
 sys.path.append("../dynamics")
+sys.path.append('./Visualizers')
 
 from network import *
 from dataloader import *
 from dataLoader.DataLoader import DataLoader
+from visTool import accCompare
 
 import numpy as np
 import torch
@@ -57,7 +59,10 @@ def compare_(args, model):
 
     x = torch.tensor(comp_inputs)
     x = torch.squeeze(x)
-    y_pred = model.forward(x.float())
+    predAcc = model.forward(x.float()).detach().numpy()
 
-    print("lmao it worked :o")
-    print(y_pred.size)
+    actualAcc = DL.state_dot_values
+
+    timeVec = DL.get_time_values()
+
+    accCompare(timeVec, actualAcc, predAcc)

@@ -39,7 +39,7 @@ if __name__ == "__main__":
     if args.mode == "train":
         train_(args, model, model.hyperparams, train_dataloader)
     elif args.mode == "eval":
-        eval_(args, model, val_dataloader)
+        eval_(args, model)
     elif args.mode == "simulate":
        pass
     elif args.mode == "compare":
