@@ -66,3 +66,6 @@ def compare_(args, model):
     timeVec = DL.get_time_values()
 
     accCompare(timeVec, actualAcc, predAcc)
+
+    avg_MSE_loss = np.sum(np.sqrt( (actualAcc - predAcc)**2 )) / len(timeVec)
+    print("Average MSE per time step: ", avg_MSE_loss)
