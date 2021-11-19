@@ -11,6 +11,7 @@ from dataLoader.DataLoader import DataLoader, DynamicsDataset
 from network import *
 from train import *
 from eval import *
+from compare import *
 
 if __name__ == "__main__":
 
@@ -41,3 +42,6 @@ if __name__ == "__main__":
         eval_(args, model, val_dataloader)
     elif args.mode == "simulate":
        pass
+    elif args.mode == "compare":
+       print("made it")
+       compare_(args, model)
