@@ -27,6 +27,14 @@ def compare_(args, model):
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
 
+    # load in all data
+    flights_file = "flights_info.txt"
+
+    all_flights = []
+    with open(flights_file) as f:
+        for line in f.readlines():
+            all_flights.append(line.split('\"')[1])
+
     # import data
     print("--- Loading validation data... ---")
     print('Loading data')
