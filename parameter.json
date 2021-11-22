@@ -17,8 +17,8 @@
     "FCN":
     {
       "hyperparameters": {
-        "batch_size": 128,
-        "learning_rate": 1e-5,
+        "batch_size": 64,
+        "learning_rate": 1e-6,
         "weight_decay": 1e-6,
         "num_epochs": 50
       }
