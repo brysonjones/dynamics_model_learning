@@ -4,6 +4,7 @@ import sys
 sys.path.append("../dynamics")
 
 from dynamics.lagrangian import *
+from DEL_network import *
 
 def get_model(args, parameters, D_in, D_out):
 
@@ -18,6 +19,8 @@ def get_model(args, parameters, D_in, D_out):
     elif args.model == "FCN":
         hidden_list = [512, 512, 512, 512, 512, 512]
         model = FullyConnectedNetwork(D_in, hidden_list, D_out)
+    elif args.model == "DELN":
+        model = DELNetwork(13)
     elif args.model == "NewtonEuler":
         pass
     else:
@@ -27,7 +30,6 @@ def get_model(args, parameters, D_in, D_out):
     model.hyperparams = parameters['model'][args.model]['hyperparameters']
 
     return model
-
 
 class LagrangianNeuralNetwork(torch.nn.Module):
     def __init__(self, D_in, lagrange_hidden, control_hidden, D_out):

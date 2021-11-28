@@ -1,16 +1,15 @@
 import sys
 
 import json
-import numpy as np
-import torch
 
 sys.path.append("./model")
 
 from arg_parser import *
-from dataLoader.DataLoader import DataLoader, DynamicsDataset
-from network import *
-from train import *
-from eval import *
+from dataLoader.DataLoader import DataLoader, DynamicsDataset, DELDataset
+from model.network import *
+from model.DEL_network import *
+from model.train import *
+from model.eval import *
 
 if __name__ == "__main__":
 
@@ -23,9 +22,13 @@ if __name__ == "__main__":
     output_size = 6
 
     model = get_model(args, parameters, input_size, output_size)
+    # get dataset
     train_data = DL.load_easy_data()
-    train_dataset = DynamicsDataset(X=DL.get_state_data(),
-                                    Y=DL.state_dot_values)
+    if args.model == "DELN":
+        train_dataset = DELDataset(X=DL.get_state_data())
+    else:
+        train_dataset = DynamicsDataset(X=DL.get_state_data(),
+                                        Y=DL.state_dot_values)
     train_dataloader = torch.utils.data.DataLoader(train_dataset,
                                                      batch_size=model.hyperparams['batch_size'],
                                                      shuffle=True,
