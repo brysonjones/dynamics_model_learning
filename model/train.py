@@ -32,7 +32,7 @@ def train_(args, model, hyperparams, dataloader):
                                  lr=learning_rate,
                                  weight_decay=weight_decay)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.3)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.1)
 
     if os.path.isfile("model_weights.pth"):
         print("Re-loading existing weights!")

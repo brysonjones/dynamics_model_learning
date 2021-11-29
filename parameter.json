@@ -21,16 +21,16 @@
         "learning_rate": 1e-5,
         "weight_decay": 1e-6,
         "num_epochs": 50
-      },
+      }
+    },
     "DELN":
     {   "hyperparameters": {
         "batch_size": 1,
-        "learning_rate": 1e-5,
+        "learning_rate": 1e-3,
         "weight_decay": 1e-6,
         "num_epochs": 1
       }
     }
-  }
   }
 
 }

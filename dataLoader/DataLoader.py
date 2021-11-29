@@ -186,7 +186,7 @@ class DELDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         ### Return data at index pair with context and label at index pair (1 line)
-        return self.X[index:index+2, :], self.Y[index]
+        return self.X[index:index+3, :], self.Y[index]
 
     @staticmethod
     def collate_fn(batch):

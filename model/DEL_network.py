@@ -20,7 +20,7 @@ class MassMatrixNetwork(torch.nn.Module):
         self.hyperparams = None
         self.model_layers = torch.nn.ModuleList()
         self.num_states = num_states
-        self.num_outputs = (num_states**2 + num_states) / 2
+        self.num_outputs = int(((num_states-1)**2 + (num_states-1)) / 2)
 
         # input layer
         self.model_layers.append(torch.nn.Linear(num_states, hidden_list[0]))
@@ -31,7 +31,7 @@ class MassMatrixNetwork(torch.nn.Module):
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
-        self.model_layers.append(torch.nn.Linear(hidden_list[-1], num_states))
+        self.model_layers.append(torch.nn.Linear(hidden_list[-1], self.num_outputs))
 
     def forward(self, q):
         """
@@ -39,14 +39,14 @@ class MassMatrixNetwork(torch.nn.Module):
         """
         diag_bias = 1.0  # TODO: determine if this should be learned
         cholesky_raw = q
-        for layer in self.diag_model_layers:
+        for layer in self.model_layers:
             cholesky_raw = layer(cholesky_raw)
 
-        diag = cholesky_raw[0:self.num_states] + diag_bias
-        lower_tri = cholesky_raw[self.num_states:]
+        diag = cholesky_raw[0:self.num_states-1] + diag_bias
+        lower_tri = cholesky_raw[self.num_states-1:]
 
         cholesky = torch.diag(diag)
-        lower_tri_indices = np.tril_indices(len(q), -1)
+        lower_tri_indices = np.tril_indices(self.num_states-1, -1)
         cholesky[lower_tri_indices] = lower_tri
         M = cholesky @ cholesky.T
 
@@ -103,13 +103,22 @@ class DissipativeForceNetwork(torch.nn.Module):
         # output is always one from this network because it is calculating system energy
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6))
 
-    def forward(self, q, q_dot):
-        out = torch.cat((q, q_dot))
+    def forward(self, q, q_next, h):
+        r1 = q[0:3]
+        Q1 = q[3:7]
+        r2 = q_next[0:3]
+        Q2 = q_next[3:7]
+        omega = 2 / h * (H.T @ L(Q1).T @ Q2)
+        Q_mid = Q1 + 0.5 * h * (0.5 * L(Q1) @ H @ omega)  # TODO: Determine if this is the best implementation
+
+        r_mid = (r1 + r2) / 2
+        r_mid_vel = (r2 - r1) / h
+
+        out = torch.cat((r_mid, Q_mid, r_mid_vel, omega))
         for layer in self.model_layers:
             out = layer(out)
 
         return out
-
 
 
 class ControlInputJacobianNetwork(torch.nn.Module):
@@ -137,14 +146,12 @@ class ControlInputJacobianNetwork(torch.nn.Module):
         """
         XXXX
         """
-        q = torch.autograd.Variable(q, requires_grad=True)
-        q_next = torch.autograd.Variable(q_next, requires_grad=True)
-        r1 = q[1:3]
-        Q1 = q[4:7]
-        r2 = q_next[1:3]
-        Q2 = q_next[4:7]
+        r1 = q[0:3]
+        Q1 = q[3:7]
+        r2 = q_next[0:3]
+        Q2 = q_next[3:7]
         omega = 2 / h * (H.T @ L(Q1).T @ Q2)
-        Q_mid = Q1 + 0.5 * h * (0.5 * L(Q1) * H * omega) # TODO: Determine if this is the best implementation
+        Q_mid = Q1 + 0.5 * h * (0.5 * L(Q1) @ H @ omega) # TODO: Determine if this is the best implementation
 
         r_mid = (r1 + r2) / 2
         q_mid = torch.cat((r_mid, Q_mid))
@@ -165,52 +172,61 @@ class DELNetwork(torch.nn.Module):
         num_pose_states = 7
         num_velocity_states = 6
         num_control_inputs = 4
+        self.h = 1/400  # Time Step of Dataset
+        hidden_list = [256, 256, 256, 256]
 
-        self.massMatrix = MassMatrixNetwork(num_pose_states, [32, 32, 32])
-        self.potentialEnergy = PotentialEnergyNetwork(num_pose_states, [32, 32, 32])
-        self.dissipativeForces = DissipativeForceNetwork(num_states, [32, 32, 32])
-        self.controlJacobian = ControlInputJacobianNetwork(num_pose_states, num_control_inputs, [32, 32, 32])
+        self.massMatrix = MassMatrixNetwork(num_pose_states, hidden_list)
+        self.potentialEnergy = PotentialEnergyNetwork(num_pose_states, hidden_list)
+        self.dissipativeForces = DissipativeForceNetwork(num_states, hidden_list)
+        self.controlJacobian = ControlInputJacobianNetwork(num_pose_states, num_control_inputs, hidden_list)
 
-    def discrete_lagrangian(self, q, q_next, h):
-        q = torch.autograd.Variable(q, requires_grad=True)
-        q_next = torch.autograd.Variable(q_next, requires_grad=True)
-        r1 = q[1:3]
-        Q1 = q[4:7]
-        r2 = q_next[1:3]
-        Q2 = q_next[4:7]
-        omega = 2 / h * (H.T @ L(Q1).T @ Q2)
-        Q_mid = Q1 + 0.5 * h * (0.5 * L(Q1) * H * omega) # TODO: Determine if this is the best implementation
+    def discrete_lagrangian(self, q, q_next):
+        r1 = q[0:3]
+        Q1 = q[3:7]
+        r2 = q_next[0:3]
+        Q2 = q_next[3:7]
+        omega = 2 / self.h * (H.T @ L(Q1).T @ Q2)
+        Q_mid = Q1 + 0.5 * self.h * (0.5 * L(Q1) @ H @ omega)  # TODO: Determine if this is the best implementation
 
         r_mid = (r1 + r2) / 2
-        r_mid_vel = (r2 - r1) / h
+        r_mid_vel = (r2 - r1) / self.h
 
         # calculate system parameters and values
         M_ = self.massMatrix(torch.cat((r_mid, Q_mid)))
+        out_trans = self.h * (1/2 * r_mid_vel.T @ M_[:3, :3] @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
+        out_rot = self.h / 2 * ((2/self.h * H.T @ L(Q1) @ Q2).T @ M_[3:, 3:] @ (2/self.h * H.T @ L(Q1) @ Q2))
 
-        out_trans = 1 / 2 * r_mid_vel.T @ M_[:3, :3] @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid)))
-        out_rot = h / 2 * ((2/h * H.T @ L(Q1) @ Q2).T @ M_[3:, 3:] @ (2/h * H.T @ L(Q1) @ Q2))
+        return out_trans + out_rot
 
-        return torch.cat((out_trans, out_rot))
+    def step(self):
+        ...
 
-    def forward(self, q1, q2, q3, u1, u2, u3, h):
+    def forward(self, x):
         """
         XXXX
         """
-        u1 = torch.autograd.Variable(u1, requires_grad=True)
-        u2 = torch.autograd.Variable(u2, requires_grad=True)
-        u3 = torch.autograd.Variable(u3, requires_grad=True)
+        q1 = x[0, [0, 1, 2, 9, 6, 7, 8]]
+        q2 = x[1, [0, 1, 2, 9, 6, 7, 8]]
+        q3 = x[2, [0, 1, 2, 9, 6, 7, 8]]
+        u1 = x[0, 13:17]
+        u2 = x[1, 13:17]
+        u3 = x[2, 13:17]
 
-        dl1 = self.discrete_lagrangian(q1, q2, h)
-        dl2 = self.discrete_lagrangian(q2, q3, h)
+        q1 = torch.autograd.Variable(q1, requires_grad=True)
+        q2 = torch.autograd.Variable(q2, requires_grad=True)
+        q3 = torch.autograd.Variable(q3, requires_grad=True)
 
-        diss_forces1 = self.dissipativeForces(q1, q2, h)
-        diss_forces2 = self.dissipativeForces(q2, q3, h)
-        control_forces1 = self.controlJacobian(q1, q2, h) @ ((u1 + u2) / 2)
-        control_forces2 = self.controlJacobian(q2, q3, h) @ ((u2 + u3) / 2)
+        diss_forces1 = self.dissipativeForces(q1, q2, self.h)
+        diss_forces2 = self.dissipativeForces(q2, q3, self.h)
+        control_forces1 = self.controlJacobian(q1, q2, self.h) @ ((u1 + u2) / 2)
+        control_forces2 = self.controlJacobian(q2, q3, self.h) @ ((u2 + u3) / 2)
 
-        DL1 = grad(dl1, q2, retain_graph=True)[0]
-        DL2 = grad(dl2, q2, retain_graph=True)[0]
+        L1_fcn = lambda q_: self.discrete_lagrangian(q1, q_)
+        L2_fcn = lambda q_: self.discrete_lagrangian(q_, q3)
 
-        DEL = DL1 + DL2 + 0.5 * (diss_forces1 + diss_forces2 + control_forces1 + control_forces2)
+        DL1 = jacobian(L1_fcn, q2, create_graph=True)
+        DL2 = jacobian(L2_fcn, q2, create_graph=True)
 
-        return DEL
+        DEL = DL1@G_(q2) + DL2@G_(q2) + self.h/2 * (diss_forces1 + diss_forces2 + control_forces1 + control_forces2)
+
+        return torch.linalg.norm(DEL)
