@@ -1,7 +1,5 @@
-"""
-Double pendulum motion simulation
 
-"""
+
 from __future__ import print_function
 
 import os
@@ -9,7 +7,6 @@ import sys
 sys.path.append("")
 sys.path.append("../dynamics")
 
-from network import *
 from dataloader import *
 
 import numpy as np

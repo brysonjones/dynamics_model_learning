@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.optimize import root
+
 import torch
 from torch.autograd.functional import jacobian, hessian
 from torch.autograd import grad
@@ -24,13 +26,16 @@ class MassMatrixNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(num_states, hidden_list[0]))
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
+            self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], self.num_outputs))
 
     def forward(self, q):
@@ -64,15 +69,18 @@ class PotentialEnergyNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(q_size, hidden_list[0]))
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
+            self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 1))
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Softplus())
 
     def forward(self, q):
@@ -93,14 +101,17 @@ class DissipativeForceNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
+            self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6))
 
     def forward(self, q, q_next, h):
@@ -133,13 +144,16 @@ class ControlInputJacobianNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
+            self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
+        self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6*num_control_inputs))
 
     def forward(self, q, q_next, h):
@@ -170,10 +184,9 @@ class DELNetwork(torch.nn.Module):
         """
         super(DELNetwork, self).__init__()
         num_pose_states = 7
-        num_velocity_states = 6
         num_control_inputs = 4
         self.h = 1/400  # Time Step of Dataset
-        hidden_list = [256, 256, 256, 256]
+        hidden_list = [64, 64, 64, 64]
 
         self.massMatrix = MassMatrixNetwork(num_pose_states, hidden_list)
         self.potentialEnergy = PotentialEnergyNetwork(num_pose_states, hidden_list)
@@ -198,23 +211,13 @@ class DELNetwork(torch.nn.Module):
 
         return out_trans + out_rot
 
-    def step(self):
-        ...
-
-    def forward(self, x):
-        """
-        XXXX
-        """
-        q1 = x[0, [0, 1, 2, 9, 6, 7, 8]]
-        q2 = x[1, [0, 1, 2, 9, 6, 7, 8]]
-        q3 = x[2, [0, 1, 2, 9, 6, 7, 8]]
-        u1 = x[0, 13:17]
-        u2 = x[1, 13:17]
-        u3 = x[2, 13:17]
-
+    def DEL(self, q1, q2, q3, u1, u2, u3):
         q1 = torch.autograd.Variable(q1, requires_grad=True)
         q2 = torch.autograd.Variable(q2, requires_grad=True)
         q3 = torch.autograd.Variable(q3, requires_grad=True)
+        u1 = torch.autograd.Variable(u1, requires_grad=True)
+        u2 = torch.autograd.Variable(u2, requires_grad=True)
+        u3 = torch.autograd.Variable(u3, requires_grad=True)
 
         diss_forces1 = self.dissipativeForces(q1, q2, self.h)
         diss_forces2 = self.dissipativeForces(q2, q3, self.h)
@@ -229,4 +232,47 @@ class DELNetwork(torch.nn.Module):
 
         DEL = DL1@G_(q2) + DL2@G_(q2) + self.h/2 * (diss_forces1 + diss_forces2 + control_forces1 + control_forces2)
 
-        return torch.linalg.norm(DEL)
+        return DEL
+
+    def step(self, q, u):
+        q1 = torch.tensor(q[0, :]).float()
+        q2 = torch.tensor(q[1, :]).float()
+        u1 = torch.tensor(u[0, :]).float()
+        u2 = torch.tensor(u[1, :]).float()
+        u3 = torch.tensor(u[2, :]).float()
+
+        def closure(q3):
+            q3 = torch.tensor(q3)
+            res = self.DEL(q1, q2, q3, u1, u2, u3)
+
+            return res.reshape(-1).detach().numpy()
+
+        def jac(q3):
+            q3 = torch.tensor(q3)
+            fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
+            jac = jacobian(fcn, q3)
+
+            return jac.detach().numpy()
+
+        q3_guess = (q2).detach().numpy().reshape(-1)
+
+        res = root(closure, q3_guess, jac=jac, method='lm')
+
+        assert res.success, res
+
+        q3 = torch.from_numpy(res.x)
+
+        return q3
+
+    def forward(self, x):
+        """
+        XXXX
+        """
+        q1 = x[0, [0, 1, 2, 9, 6, 7, 8]]
+        q2 = x[1, [0, 1, 2, 9, 6, 7, 8]]
+        q3 = x[2, [0, 1, 2, 9, 6, 7, 8]]
+        u1 = x[0, 13:17]
+        u2 = x[1, 13:17]
+        u3 = x[2, 13:17]
+
+        return torch.linalg.norm(self.DEL(q1, q2, q3, u1, u2, u3)) ** 2

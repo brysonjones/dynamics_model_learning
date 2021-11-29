@@ -10,6 +10,7 @@ from model.network import *
 from model.DEL_network import *
 from model.train import *
 from model.eval import *
+from dynamics.simulate import *
 
 if __name__ == "__main__":
 
@@ -43,4 +44,9 @@ if __name__ == "__main__":
     elif args.mode == "eval":
         eval_(args, model, val_dataloader)
     elif args.mode == "simulate":
-       pass
+        easy_data = DL.get_state_data()
+
+        q1 = easy_data[0, [0, 1, 2, 9, 6, 7, 8]]
+        q2 = easy_data[1, [0, 1, 2, 9, 6, 7, 8]]
+        u_array = easy_data[:, 13:17]
+        simulate_(model, q1, q2, u_array)
