@@ -16,8 +16,20 @@ import numpy as np
 import torch.utils.data
 import pandas as pd
 
+import wandb
 
 def train_(args, model, hyperparams, dataloader):
+
+    if args.wandb:
+        wandb.init(project="ML_sys-id", entity="schwartz_code")
+
+        wandb.config = {
+          "learning_rate": hyperparams["learning_rate"],
+          "epochs": hyperparams["num_epochs"],
+          "batch_size": len(dataloader),
+          "hidden_layers": "15k"
+        }
+
     print("--- Starting Main Training Loop! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
@@ -78,6 +90,9 @@ def train_(args, model, hyperparams, dataloader):
             # run optimization step based on backwards pass
             scaler.step(optimizer)
 
+            # update average training loss
+            average_training_loss += loss / len(dataloader)
+
             # update the scale for next iteration
             scaler.update()
 
@@ -96,5 +111,7 @@ def train_(args, model, hyperparams, dataloader):
                 }, "model_weights.pth")
 
         scheduler.step()
+        if args.wandb:
+            wandb.log({"average loss": average_training_loss})
 
     print('end')
