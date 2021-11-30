@@ -5,6 +5,7 @@ sys.path.append("../dynamics")
 
 from dynamics.lagrangian import *
 
+
 def get_model(args, parameters, D_in, D_out):
 
     print("--- Constructing Model... ---")
