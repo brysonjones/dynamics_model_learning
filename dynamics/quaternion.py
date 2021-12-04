@@ -34,6 +34,6 @@ def G_(q):
 
 def rho(phi):
     # convert from ϕ to a quaternion
-    return (1/torch.sqrt(1 + phi @ phi))*torch.tensor([[1],[phi]])
+    return (1/torch.sqrt(1 + phi @ phi))*torch.hstack((torch.tensor(1), phi))
 
 

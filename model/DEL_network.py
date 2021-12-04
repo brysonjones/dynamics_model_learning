@@ -26,23 +26,23 @@ class MassMatrixNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(num_states, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            # self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], self.num_outputs))
 
     def forward(self, q):
         """
         XXXX
         """
-        diag_bias = 1.0  # TODO: determine if this should be learned
+        diag_bias = 1e-3  # TODO: determine if this should be learned
         cholesky_raw = q
         for layer in self.model_layers:
             cholesky_raw = layer(cholesky_raw)
@@ -69,18 +69,18 @@ class PotentialEnergyNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(q_size, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            # self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 1))
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Softplus())
 
     def forward(self, q):
@@ -101,17 +101,17 @@ class DissipativeForceNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            # self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6))
 
     def forward(self, q, q_next, h):
@@ -144,16 +144,16 @@ class ControlInputJacobianNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            # self.model_layers.append(torch.nn.Dropout())
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
-        self.model_layers.append(torch.nn.Dropout())
+        # self.model_layers.append(torch.nn.Dropout())
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6*num_control_inputs))
 
     def forward(self, q, q_next, h):
@@ -186,7 +186,8 @@ class DELNetwork(torch.nn.Module):
         num_pose_states = 7
         num_control_inputs = 4
         self.h = 1/400  # Time Step of Dataset
-        hidden_list = [64, 64, 64, 64]
+        hidden_list = [64, 64, 64, 64, 64]
+        self.M_ = None
 
         self.massMatrix = MassMatrixNetwork(num_pose_states, hidden_list)
         self.potentialEnergy = PotentialEnergyNetwork(num_pose_states, hidden_list)
@@ -205,19 +206,15 @@ class DELNetwork(torch.nn.Module):
         r_mid_vel = (r2 - r1) / self.h
 
         # calculate system parameters and values
-        M_ = self.massMatrix(torch.cat((r_mid, Q_mid)))
-        out_trans = self.h * (1/2 * r_mid_vel.T @ M_[:3, :3] @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
-        out_rot = self.h / 2 * ((2/self.h * H.T @ L(Q1) @ Q2).T @ M_[3:, 3:] @ (2/self.h * H.T @ L(Q1) @ Q2))
+        self.M_ = self.massMatrix(torch.cat((r_mid, Q_mid)))
+        m = 0.752 * torch.eye(3)
+        out_trans = self.h * (1/2 * r_mid_vel.T @ m @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
+        out_rot = self.h / 2 * ((2/self.h * H.T @ L(Q1) @ Q2).T @ self.M_[3:, 3:] @ (2/self.h * H.T @ L(Q1) @ Q2))
 
         return out_trans + out_rot
 
     def DEL(self, q1, q2, q3, u1, u2, u3):
-        q1 = torch.autograd.Variable(q1, requires_grad=True)
         q2 = torch.autograd.Variable(q2, requires_grad=True)
-        q3 = torch.autograd.Variable(q3, requires_grad=True)
-        u1 = torch.autograd.Variable(u1, requires_grad=True)
-        u2 = torch.autograd.Variable(u2, requires_grad=True)
-        u3 = torch.autograd.Variable(u3, requires_grad=True)
 
         diss_forces1 = self.dissipativeForces(q1, q2, self.h)
         diss_forces2 = self.dissipativeForces(q2, q3, self.h)
@@ -234,35 +231,39 @@ class DELNetwork(torch.nn.Module):
 
         return DEL
 
-    def step(self, q, u):
-        q1 = torch.tensor(q[0, :]).float()
-        q2 = torch.tensor(q[1, :]).float()
-        u1 = torch.tensor(u[0, :]).float()
-        u2 = torch.tensor(u[1, :]).float()
-        u3 = torch.tensor(u[2, :]).float()
+    def step(self, q1, q2, u1, u2, u3):
+        self.massMatrix.eval()
+        self.potentialEnergy.eval()
+        self.dissipativeForces.eval()
+        self.controlJacobian.eval()
 
-        def closure(q3):
-            q3 = torch.tensor(q3)
-            res = self.DEL(q1, q2, q3, u1, u2, u3)
+        q1 = torch.tensor(q1).float()
+        q2 = torch.tensor(q2).float()
+        u1 = torch.tensor(u1).float()
+        u2 = torch.tensor(u2).float()
+        u3 = torch.tensor(u3).float()
 
-            return res.reshape(-1).detach().numpy()
+        q3_guess = q2 + (q2 - q1)
+        q3_guess = torch.autograd.Variable(q3_guess, requires_grad=True)
+        fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
 
-        def jac(q3):
-            q3 = torch.tensor(q3)
-            fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
-            jac = jacobian(fcn, q3)
+        # use Newton's Method to find true zero
+        while True:
+            e = torch.squeeze(self.DEL(q1, q2, q3_guess, u1, u2, u3))
+            if torch.linalg.norm(e) < 1:
+                break
+            res_jac = torch.squeeze(jacobian(fcn, q3_guess, create_graph=True, strict=True))
+            with torch.no_grad():
+                res_jac_trans = res_jac[0:3, 0:3]
+                res_jac_rot = res_jac[3:6, 3:7] @ G(q3_guess[3:7])
+                phi = torch.linalg.solve(-res_jac_rot.T, e[3:6])
+                q3_guess[0:3] = q3_guess[0:3] - torch.linalg.solve(res_jac_trans, e[0:3])
+                q3_guess[3:7] = L(q3_guess[3:7]) @ rho(phi)
 
-            return jac.detach().numpy()
+        print(q3_guess)
+        q3 = q3_guess
 
-        q3_guess = (q2).detach().numpy().reshape(-1)
-
-        res = root(closure, q3_guess, jac=jac, method='lm')
-
-        assert res.success, res
-
-        q3 = torch.from_numpy(res.x)
-
-        return q3
+        return q3.detach().numpy()
 
     def forward(self, x):
         """
@@ -275,4 +276,6 @@ class DELNetwork(torch.nn.Module):
         u2 = x[1, 13:17]
         u3 = x[2, 13:17]
 
-        return torch.linalg.norm(self.DEL(q1, q2, q3, u1, u2, u3)) ** 2
+        mu = 0.01
+        alpha = 1e-1
+        return torch.linalg.norm(self.DEL(q1, q2, q3, u1, u2, u3)) - mu*torch.det(self.M_ - alpha*torch.eye(6))

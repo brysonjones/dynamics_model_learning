@@ -24,9 +24,16 @@ if __name__ == "__main__":
 
     model = get_model(args, parameters, input_size, output_size)
     # get dataset
-    train_data = DL.load_easy_data()
+    # train_data = DL.load_easy_data()
+    DL.load_selected_data(DL.short_circles[1])
+    train_data = DL.get_state_data()
+    np.save("train.npy", train_data)
+    DL.load_selected_data(DL.short_circles[0])
+    eval_data = DL.get_state_data()
+    np.save("eval.npy", eval_data)
     if args.model == "DELN":
-        train_dataset = DELDataset(X=DL.get_state_data())
+        train_dataset = DELDataset(X=train_data)
+        eval_dataset = DELDataset(X=eval_data)
     else:
         train_dataset = DynamicsDataset(X=DL.get_state_data(),
                                         Y=DL.state_dot_values)
@@ -49,4 +56,4 @@ if __name__ == "__main__":
         q1 = easy_data[0, [0, 1, 2, 9, 6, 7, 8]]
         q2 = easy_data[1, [0, 1, 2, 9, 6, 7, 8]]
         u_array = easy_data[:, 13:17]
-        simulate_(model, q1, q2, u_array)
+        # simulate_(model, q1, q2, u_array)

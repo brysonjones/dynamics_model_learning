@@ -72,6 +72,9 @@ def train_(args, model, hyperparams, dataloader):
             # perform backwards pass
             scaler.scale(loss).backward()
 
+            # clip gradients
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+
             # run optimization step based on backwards pass
             scaler.step(optimizer)
 
