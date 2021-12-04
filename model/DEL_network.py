@@ -42,7 +42,7 @@ class MassMatrixNetwork(torch.nn.Module):
         """
         XXXX
         """
-        diag_bias = 1e-3  # TODO: determine if this should be learned
+        diag_bias = 1e-1  # TODO: determine if this should be learned
         cholesky_raw = q
         for layer in self.model_layers:
             cholesky_raw = layer(cholesky_raw)
@@ -250,7 +250,7 @@ class DELNetwork(torch.nn.Module):
         # use Newton's Method to find true zero
         while True:
             e = torch.squeeze(self.DEL(q1, q2, q3_guess, u1, u2, u3))
-            if torch.linalg.norm(e) < 1:
+            if torch.linalg.norm(e) < 1e-4:
                 break
             res_jac = torch.squeeze(jacobian(fcn, q3_guess, create_graph=True, strict=True))
             with torch.no_grad():
@@ -263,7 +263,7 @@ class DELNetwork(torch.nn.Module):
         print(q3_guess)
         q3 = q3_guess
 
-        return q3.detach().numpy()
+        return q3
 
     def forward(self, x):
         """

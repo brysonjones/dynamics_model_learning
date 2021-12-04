@@ -7,14 +7,14 @@ import sys
 sys.path.append("")
 sys.path.append("../dynamics")
 
-from dataloader import *
+from eval import *
 
 import numpy as np
 import torch.utils.data
 import pandas as pd
 
 
-def train_(args, model, hyperparams, dataloader):
+def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
     print("--- Starting Main Training Loop! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
@@ -48,15 +48,22 @@ def train_(args, model, hyperparams, dataloader):
     # set up GradScaler to improve run speed
     scaler = torch.cuda.amp.GradScaler()
 
+    # set up csv files for logging
+    loss_data = pd.DataFrame(data=["Epoch Num", "Average Loss"]).T
+    with open("training_loss_data.csv", 'w') as file:
+        loss_data.to_csv(file, header=False)
+    val_data = pd.DataFrame(data=["Epoch Num", "Average Error"]).T
+    with open("val_loss_data.csv", 'w') as file:
+        val_data.to_csv(file, header=False)
+
     print("--- Beginning Training! ---")
     for epoch in range(num_epochs):
 
         model.train()
-        average_training_loss = 0
 
         print("Epoch #", epoch)
-
-        for batch_idx, (x, y) in enumerate(dataloader):
+        average_del_res = 0
+        for batch_idx, (x, y) in enumerate(train_dataloader):
             x, y = x.to(device), y.to(device)
 
             optimizer.zero_grad()
@@ -68,6 +75,7 @@ def train_(args, model, hyperparams, dataloader):
                 loss = loss_fcn(y_pred.unsqueeze(0), y.float())
                 loss_data = pd.DataFrame(data=[loss.detach().numpy()],
                                          columns=["loss"])
+                average_del_res += loss.detach().numpy()
 
             # perform backwards pass
             scaler.scale(loss).backward()
@@ -94,6 +102,17 @@ def train_(args, model, hyperparams, dataloader):
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                 }, "model_weights.pth")
+
+        average_del_res /= len(train_dataloader)
+        print("Average DEL Resiual over Epoch: ", average_del_res)
+        loss_data = pd.DataFrame(data=[epoch, average_del_res]).T
+        with open("training_loss_data.csv", 'a') as file:
+            loss_data.to_csv(file, header=False)
+
+        avg_val_error = eval_(args, model, eval_dataloader)
+        val_data = pd.DataFrame(data=[epoch, avg_val_error]).T
+        with open("val_loss_data.csv", 'a') as file:
+            val_data.to_csv(file, header=False)
 
         scheduler.step()
 
