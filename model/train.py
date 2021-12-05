@@ -34,6 +34,10 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
 
     # ensure model is in train mode so gradients are properly calculated
     model.train()
+    model.massMatrix.train()
+    model.potentialEnergy.train()
+    model.dissipativeForces.train()
+    model.controlJacobian.train()
     # load device to either GPU or CPU depending on hardware
     model.to(device)
 

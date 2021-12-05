@@ -3,6 +3,8 @@ import torch
 
 H = torch.cat((torch.zeros(1,3), torch.eye(3)), dim=0)
 
+use_cuda = torch.cuda.is_available()
+device = torch.device("cuda:0" if use_cuda else "cpu")
 # Some standard functions for dealing with rotation matrices and quaternions
 
 
