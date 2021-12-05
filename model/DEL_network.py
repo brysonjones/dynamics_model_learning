@@ -207,8 +207,8 @@ class DELNetwork(torch.nn.Module):
 
         # calculate system parameters and values
         self.M_ = self.massMatrix(torch.cat((r_mid, Q_mid)))
-        m = 0.752 * torch.eye(3)
-        out_trans = self.h * (1/2 * r_mid_vel.T @ m @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
+        # m = 0.752 * torch.eye(3)
+        out_trans = self.h * (1/2 * r_mid_vel.T @ self.M_[:3, :3] @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
         out_rot = self.h / 2 * ((2/self.h * H.T @ L(Q1) @ Q2).T @ self.M_[3:, 3:] @ (2/self.h * H.T @ L(Q1) @ Q2))
 
         return out_trans + out_rot
@@ -242,7 +242,7 @@ class DELNetwork(torch.nn.Module):
         fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
 
         # use Newton's Method to find true zero
-        for i in range(10):
+        for i in range(25):
             e = torch.squeeze(self.DEL(q1, q2, q3_guess, u1, u2, u3))
             if torch.linalg.norm(e) < 1e-5:
                 break
