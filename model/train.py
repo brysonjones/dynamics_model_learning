@@ -24,6 +24,11 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
                                  lr=learning_rate,
                                  weight_decay=weight_decay)
 
+    # optimizer = torch.optim.SGD(model.parameters(),
+    #                             lr=learning_rate,
+    #                             momentum=0
+    #                             weight_decay=weight_decay)
+
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
     if os.path.isfile("model_weights.pth"):
@@ -80,7 +85,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
             scaler.scale(loss).backward()
 
             # clip gradients
-            # torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
 
             # run optimization step based on backwards pass
             scaler.step(optimizer)

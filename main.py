@@ -39,6 +39,9 @@ if __name__ == "__main__":
     DL.load_selected_data(DL.short_circles[0])
     eval_data = DL.get_state_data()[0:500, :]
     np.save("eval.npy", eval_data)
+    DL.load_selected_data(DL.short_circles[5])
+    test_data = DL.get_state_data()[0:500, :]
+    np.save("test.npy", test_data)
     if args.model == "DELN":
         train_dataset = DELDataset(X=all_train_data)
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
@@ -49,6 +52,13 @@ if __name__ == "__main__":
                                                        num_workers=1)
         eval_dataset = DELTestDataset(X=eval_data)
         eval_dataloader = torch.utils.data.DataLoader(eval_dataset,
+                                                      batch_size=model.hyperparams['batch_size'],
+                                                      shuffle=False,
+                                                      collate_fn=DELTestDataset.collate_fn,
+                                                      pin_memory=True,
+                                                      num_workers=1)
+        test_dataset = DELTestDataset(X=test_data)
+        test_dataloader = torch.utils.data.DataLoader(test_dataset,
                                                       batch_size=model.hyperparams['batch_size'],
                                                       shuffle=False,
                                                       collate_fn=DELTestDataset.collate_fn,
@@ -80,6 +90,8 @@ if __name__ == "__main__":
         train_(args, model, model.hyperparams, train_dataloader, eval_dataloader)
     elif args.mode == "eval":
         eval_(model, eval_dataloader)
+    elif args.mode == "test":
+        eval_(model, test_dataloader)
     elif args.mode == "simulate":
         easy_data = DL.get_state_data()
 

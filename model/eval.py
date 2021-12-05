@@ -48,6 +48,10 @@ def eval_(model, dataloader):
                                  torch.squeeze(u3.to(device))
 
         q3_pred = model.step(q1, q2, u1, u2, u3)
+        print(q1)
+        print(q2)
+        print(q3)
+        print(q3_pred)
         loss = loss_fcn(q3_pred, q3.float())
         average_validation_error += np.sqrt(loss.detach().numpy())
 

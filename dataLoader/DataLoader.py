@@ -239,7 +239,7 @@ class DELTestDataset(torch.utils.data.Dataset):
 
         # Select all data from batch
         batch_q1 = [q1 for q1, q2, q3, u1, u2, u3 in batch]
-        batch_q2 = [q1 for q1, q2, q3, u1, u2, u3 in batch]
+        batch_q2 = [q2 for q1, q2, q3, u1, u2, u3 in batch]
         batch_u1 = [u1 for q1, q2, q3, u1, u2, u3 in batch]
         batch_u2 = [u2 for q1, q2, q3, u1, u2, u3 in batch]
         batch_u3 = [u3 for q1, q2, q3, u1, u2, u3 in batch]

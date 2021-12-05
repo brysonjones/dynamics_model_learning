@@ -26,16 +26,16 @@ class MassMatrixNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(num_states, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            self.model_layers.append(torch.nn.Dropout(0.15))
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], self.num_outputs))
 
     def forward(self, q):
@@ -69,18 +69,18 @@ class PotentialEnergyNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(q_size, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            self.model_layers.append(torch.nn.Dropout(0.15))
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 1))
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Softplus())
 
     def forward(self, q):
@@ -101,17 +101,17 @@ class DissipativeForceNetwork(torch.nn.Module):
 
         # input layer - Lagrange
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            self.model_layers.append(torch.nn.Dropout(0.15))
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
         # output is always one from this network because it is calculating system energy
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6))
 
     def forward(self, q, q_next, h):
@@ -144,16 +144,16 @@ class ControlInputJacobianNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Tanh())
         # add all hidden layers
         for i in range(0, len(hidden_list) - 1):
             self.model_layers.append(torch.nn.Linear(hidden_list[i], hidden_list[i + 1]))
-            self.model_layers.append(torch.nn.Dropout())
+            self.model_layers.append(torch.nn.Dropout(0.15))
             self.model_layers.append(torch.nn.Tanh())
 
         # output layer
-        self.model_layers.append(torch.nn.Dropout())
+        self.model_layers.append(torch.nn.Dropout(0.15))
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], 6*num_control_inputs))
 
     def forward(self, q, q_next, h):
@@ -183,6 +183,7 @@ class DELNetwork(torch.nn.Module):
         Neural Network used to approximate the discrete Euler-Lagrange of the system
         """
         super(DELNetwork, self).__init__()
+        num_trans_states = 3
         num_pose_states = 7
         num_control_inputs = 4
         self.h = 1/400  # Time Step of Dataset
@@ -190,7 +191,7 @@ class DELNetwork(torch.nn.Module):
         self.M_ = None
 
         self.massMatrix = MassMatrixNetwork(num_pose_states, hidden_list)
-        self.potentialEnergy = PotentialEnergyNetwork(num_pose_states, hidden_list)
+        self.potentialEnergy = PotentialEnergyNetwork(num_trans_states, hidden_list)
         self.dissipativeForces = DissipativeForceNetwork(num_states, hidden_list)
         self.controlJacobian = ControlInputJacobianNetwork(num_pose_states, num_control_inputs, hidden_list)
 
@@ -207,8 +208,8 @@ class DELNetwork(torch.nn.Module):
 
         # calculate system parameters and values
         self.M_ = self.massMatrix(torch.cat((r_mid, Q_mid)))
-        # m = 0.752 * torch.eye(3)
-        out_trans = self.h * (1/2 * r_mid_vel.T @ self.M_[:3, :3] @ r_mid_vel - self.potentialEnergy(torch.cat((r_mid, Q_mid))))
+        m = 0.752 * torch.eye(3)
+        out_trans = self.h * (1/2 * r_mid_vel.T @ m @ r_mid_vel - self.potentialEnergy(r_mid))
         out_rot = self.h / 2 * ((2/self.h * H.T @ L(Q1) @ Q2).T @ self.M_[3:, 3:] @ (2/self.h * H.T @ L(Q1) @ Q2))
 
         return out_trans + out_rot
@@ -242,9 +243,9 @@ class DELNetwork(torch.nn.Module):
         fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
 
         # use Newton's Method to find true zero
-        for i in range(25):
+        for i in range(30):
             e = torch.squeeze(self.DEL(q1, q2, q3_guess, u1, u2, u3))
-            if torch.linalg.norm(e) < 1e-5:
+            if torch.linalg.norm(e) < 1e-4:
                 break
             res_jac = torch.squeeze(jacobian(fcn, q3_guess, create_graph=True, strict=True))
             with torch.no_grad():
