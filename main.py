@@ -5,7 +5,7 @@ import json
 sys.path.append("./model")
 
 from arg_parser import *
-from dataLoader.DataLoader import DataLoader, DynamicsDataset, DELDataset
+from dataLoader.DataLoader import DataLoader, DynamicsDataset, DELDataset, DELTestDataset
 from model.network import *
 from model.DEL_network import *
 from model.train import *
@@ -20,30 +20,38 @@ if __name__ == "__main__":
     parameters = json.load(param_file)
 
     input_size = 17  # number of state dimensions for dataset
+    num_pose_states = 7
+    num_control_inputs = 4
     output_size = 6
 
     model = get_model(args, parameters, input_size, output_size)
     # get dataset
     # train_data = DL.load_easy_data()
-    DL.load_selected_data(DL.short_circles[1])
-    train_data = DL.get_state_data()
-    np.save("train.npy", train_data)
+    DL.load_selected_data(DL.short_circles[2])
+    train_data_1 = DL.get_state_data()
+    np.save("train.npy", train_data_1)
+    DL.load_selected_data(DL.linear_oscillations[0])
+    train_data_2 = DL.get_state_data()
+    DL.load_selected_data(DL.vertical_oscillations[0])
+    train_data_3 = DL.get_state_data()
+    all_train_data = [train_data_1, train_data_2, train_data_3]
+    np.savez("train.npz", data_1=train_data_1, data_2=train_data_2, data_3=train_data_3)
     DL.load_selected_data(DL.short_circles[0])
-    eval_data = DL.get_state_data()
+    eval_data = DL.get_state_data()[0:500, :]
     np.save("eval.npy", eval_data)
     if args.model == "DELN":
-        train_dataset = DELDataset(X=train_data)
+        train_dataset = DELDataset(X=all_train_data)
         train_dataloader = torch.utils.data.DataLoader(train_dataset,
                                                        batch_size=model.hyperparams['batch_size'],
                                                        shuffle=True,
                                                        collate_fn=DELDataset.collate_fn,
                                                        pin_memory=True,
                                                        num_workers=1)
-        eval_dataset = DELDataset(X=eval_data)
+        eval_dataset = DELTestDataset(X=eval_data)
         eval_dataloader = torch.utils.data.DataLoader(eval_dataset,
                                                       batch_size=model.hyperparams['batch_size'],
                                                       shuffle=False,
-                                                      collate_fn=DELDataset.collate_fn,
+                                                      collate_fn=DELTestDataset.collate_fn,
                                                       pin_memory=True,
                                                       num_workers=1)
     else:
@@ -71,7 +79,7 @@ if __name__ == "__main__":
     if args.mode == "train":
         train_(args, model, model.hyperparams, train_dataloader, eval_dataloader)
     elif args.mode == "eval":
-        eval_(args, model, eval_dataloader)
+        eval_(model, eval_dataloader)
     elif args.mode == "simulate":
         easy_data = DL.get_state_data()
 

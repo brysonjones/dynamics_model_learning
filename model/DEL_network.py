@@ -237,20 +237,14 @@ class DELNetwork(torch.nn.Module):
         self.dissipativeForces.eval()
         self.controlJacobian.eval()
 
-        q1 = torch.tensor(q1).float()
-        q2 = torch.tensor(q2).float()
-        u1 = torch.tensor(u1).float()
-        u2 = torch.tensor(u2).float()
-        u3 = torch.tensor(u3).float()
-
         q3_guess = q2 + (q2 - q1)
         q3_guess = torch.autograd.Variable(q3_guess, requires_grad=True)
         fcn = lambda q_: self.DEL(q1, q2, q_, u1, u2, u3)
 
         # use Newton's Method to find true zero
-        while True:
+        for i in range(10):
             e = torch.squeeze(self.DEL(q1, q2, q3_guess, u1, u2, u3))
-            if torch.linalg.norm(e) < 1e-4:
+            if torch.linalg.norm(e) < 1e-5:
                 break
             res_jac = torch.squeeze(jacobian(fcn, q3_guess, create_graph=True, strict=True))
             with torch.no_grad():
@@ -260,7 +254,6 @@ class DELNetwork(torch.nn.Module):
                 q3_guess[0:3] = q3_guess[0:3] - torch.linalg.solve(res_jac_trans, e[0:3])
                 q3_guess[3:7] = L(q3_guess[3:7]) @ rho(phi)
 
-        print(q3_guess)
         q3 = q3_guess
 
         return q3

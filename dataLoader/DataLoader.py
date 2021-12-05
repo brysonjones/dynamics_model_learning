@@ -175,10 +175,14 @@ class DELDataset(torch.utils.data.Dataset):
     '''
     def __init__(self, X):
         # Assign data and label to self
-        self.X = X
-        self.Y = np.zeros(X.shape[0] - 2)
+        self.X = []
+        for data in X:
+            for i in range(data.shape[0]-2):
+                self.X.append(data[i:i+3, :])
 
-        self.length = X.shape[0] - 2
+        self.Y = np.zeros(len(self.X))
+
+        self.length = len(self.X)
 
     def __len__(self):
         # Return length
@@ -186,7 +190,7 @@ class DELDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         ### Return data at index pair with context and label at index pair (1 line)
-        return self.X[index:index+3, :], self.Y[index]
+        return self.X[index], self.Y[index]
 
     @staticmethod
     def collate_fn(batch):
@@ -221,22 +225,37 @@ class DELTestDataset(torch.utils.data.Dataset):
         return self.length
 
     def __getitem__(self, index):
-        ### Return data at index pair with context and label at index pair (1 line)
-        return self.X[index:index+3, :], self.Y[index]
+        ### Return data at index pair with context and label at index pair (1 line)self.X[
+        q1 = self.X[index, [0, 1, 2, 9, 6, 7, 8]]
+        q2 = self.X[index+1, [0, 1, 2, 9, 6, 7, 8]]
+        q3 = self.Y[index, [0, 1, 2, 9, 6, 7, 8]]
+        u1 = self.X[index, 13:17]
+        u2 = self.X[index+1, 13:17]
+        u3 = self.X[index+2, 13:17]
+        return q1, q2, q3, u1, u2, u3
 
     @staticmethod
     def collate_fn(batch):
 
         # Select all data from batch
-        batch_x = [x for x, y in batch]
+        batch_q1 = [q1 for q1, q2, q3, u1, u2, u3 in batch]
+        batch_q2 = [q1 for q1, q2, q3, u1, u2, u3 in batch]
+        batch_u1 = [u1 for q1, q2, q3, u1, u2, u3 in batch]
+        batch_u2 = [u2 for q1, q2, q3, u1, u2, u3 in batch]
+        batch_u3 = [u3 for q1, q2, q3, u1, u2, u3 in batch]
 
         # Select all labels from batch
-        batch_y = [y for x, y in batch]
+        batch_q3 = [q3 for q1, q2, q3, u1, u2, u3 in batch]
 
         # Convert batched data and labels to tensors
-        batch_x = torch.as_tensor(batch_x)
-        batch_y = torch.as_tensor(batch_y)
+        batch_q1 = torch.as_tensor(batch_q1).float()
+        batch_q2 = torch.as_tensor(batch_q2).float()
+        batch_u1 = torch.as_tensor(batch_u1).float()
+        batch_u2 = torch.as_tensor(batch_u2).float()
+        batch_u3 = torch.as_tensor(batch_u3).float()
+
+        batch_q3 = torch.as_tensor(batch_q3).float()
 
         # Return batched data and labels
-        return batch_x, batch_y
+        return batch_q1, batch_q2, batch_q3, batch_u1, batch_u2, batch_u3
 

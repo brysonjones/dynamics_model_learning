@@ -1,15 +1,10 @@
 
-
-from __future__ import print_function
-
-import os
 import sys
 sys.path.append("")
 sys.path.append("../dynamics")
 
 from eval import *
 
-import numpy as np
 import torch.utils.data
 import pandas as pd
 
@@ -29,7 +24,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
                                  lr=learning_rate,
                                  weight_decay=weight_decay)
 
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=2, gamma=0.1)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=5, gamma=0.1)
 
     if os.path.isfile("model_weights.pth"):
         print("Re-loading existing weights!")
@@ -81,7 +76,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
             scaler.scale(loss).backward()
 
             # clip gradients
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+            # torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
 
             # run optimization step based on backwards pass
             scaler.step(optimizer)
@@ -109,7 +104,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
         with open("training_loss_data.csv", 'a') as file:
             loss_data.to_csv(file, header=False)
 
-        avg_val_error = eval_(args, model, eval_dataloader)
+        avg_val_error = eval_(model, eval_dataloader)
         val_data = pd.DataFrame(data=[epoch, avg_val_error]).T
         with open("val_loss_data.csv", 'a') as file:
             val_data.to_csv(file, header=False)

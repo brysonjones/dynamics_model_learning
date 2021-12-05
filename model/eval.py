@@ -17,7 +17,7 @@ import torch
 import torch.utils.data
 import pandas as pd
 
-def eval_(args, model, dataloader):
+def eval_(model, dataloader):
     print("--- Starting Network Evaluation! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
@@ -39,20 +39,24 @@ def eval_(args, model, dataloader):
 
     print("--- Beginning Evaluating! ---")
     average_validation_error = 0
-    for batch_idx, (x, y) in enumerate(dataloader):
-        x, y = x.to(device), y.to(device)
+    for batch_idx, (q1, q2, q3, u1, u2, u3) in enumerate(dataloader):
+        q1, q2, q3, u1, u2, u3 = torch.squeeze(q1.to(device)), \
+                                 torch.squeeze(q2.to(device)), \
+                                 torch.squeeze(q3.to(device)), \
+                                 torch.squeeze(u1.to(device)), \
+                                 torch.squeeze(u2.to(device)), \
+                                 torch.squeeze(u3.to(device))
 
-        x = torch.squeeze(x)
-        y_pred = model.forward(x.float())
-        loss = loss_fcn(y_pred.unsqueeze(0), y.float())
+        q3_pred = model.step(q1, q2, u1, u2, u3)
+        loss = loss_fcn(q3_pred, q3.float())
         average_validation_error += np.sqrt(loss.detach().numpy())
 
-        # if loss > 1:
-        #     print("Iter Num: ", batch_idx)
-        #     print("\tValidation Error", loss)
-        # if batch_idx % 100 == 0:
-        #     print("Iter Num: ", batch_idx)
-        #     print("\tValidation Error", loss)
+        if loss > 1:
+            print("Iter Num: ", batch_idx)
+            print("\tValidation Error", loss)
+        if batch_idx % 20  == 0:
+            print("Iter Num: ", batch_idx)
+            print("\tValidation Error", loss)
 
     average_validation_error /= len(dataloader)
 
