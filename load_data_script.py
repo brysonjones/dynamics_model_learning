@@ -17,6 +17,8 @@ saveFileName = "train_dataset.npz"
 # initialize with path to data folder
 DL = DataLoader(data_folder)
 
+# DL.load_selected_data(val_data)
+# DL.get_state_data()
 DL.load_selected_data(all_flights[:-5])
-print(DL.get_time_values().shape)
+# print(DL.get_time_values().shape)
 DL.saveData(saveFileName)

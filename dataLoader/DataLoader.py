@@ -63,7 +63,7 @@ class DataLoader(object):
     def get_column_names(self):
         return self.data.keys().values
 
-    def load_selected_data(self, selected_data):
+    def load_selected_data(self, selected_data, smooth_ang_accels=True):
         self.selected_data = selected_data
 
         self.data = None
@@ -75,9 +75,16 @@ class DataLoader(object):
         for f in flights:
             if f[7:-10] in selected_data:
                 if self.data is None:
-                    self.data = pd.read_csv(os.path.join(self.data_path, f))
+                    if smooth_ang_accels:
+                        self.data = self.smooth_angular_accels(pd.read_csv(os.path.join(self.data_path, f)))
+                    else:
+                        self.data = pd.read_csv(os.path.join(self.data_path, f))
                 else:
-                    self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
+                    if smooth_ang_accels:
+                        self.data = pd.concat([self.data, self.smooth_angular_accels(pd.read_csv(os.path.join(self.data_path, f)))])
+                    else:
+                        self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
+
 
         self.motor_speed_columns = self.get_column_names()[-9:-5]
         self.motor_derivative_columns = self.get_column_names()[-5:-1]
@@ -90,7 +97,6 @@ class DataLoader(object):
         return self.data['t'].values
 
     def get_state_data(self):
-        # indexes columns
         return self.data[self.state_columns].values
 
     def get_control_inputs(self):
@@ -110,27 +116,36 @@ class DataLoader(object):
     def calculate_state_dot_values(self):
         self.state_dot_values = self.data[['acc x', 'acc y', 'acc z', 'ang acc x', 'ang acc y', 'ang acc z']].values
 
-    # L operator for quaternions that Zac covered in lec 7, used to calculate quaternion derivatives
-    @staticmethod
-    def quat_dot(q, w):
-        q_vec_hat = np.array([[0, -q[3], q[2]], [q[3], 0, -q[1]], [-q[2], q[1], 0]])
-
-        L = np.zeros((4,4))
-        L[0,0] = q[0]
-        L[0,1:] = -q[1:]
-        L[1:,0] = q[1:]
-        L[1:,1:] = q[0]*np.eye(3) + q_vec_hat
-
-        # np.vstack term is H from the notes [0; I(3)]
-        return 0.5 * L @ np.vstack([np.zeros(3), np.eye(3)]) @ w
-
-    # hat operator for a length 3 vector
-    @staticmethod
-    def hat(x):
-        return np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
-
     def saveData(self, filePath):
         np.savez(filePath, input=self.get_state_data(), labels=self.state_dot_values, control_inputs=self.get_control_inputs())
+
+    # smoothed by applying moving average filter
+    def smooth_angular_accels(self, data):
+        for accel in data.keys().values[1:4]:
+            N = 25
+
+            new_data = np.convolve(data[accel].values, np.ones(N)/N, mode='valid')
+            # account for convolution output being smaller than data length
+            for i in range(N-1):
+                old_datum = np.sum(data[accel].values[:i+1]) / (i+1)
+                new_data = np.insert(new_data, i, old_datum)
+
+            pd_update = pd.DataFrame({accel: new_data})
+            data.update(pd_update)
+
+        return data
+
+    def poly_fit_angular_accelerations(self):
+        import matplotlib.pyplot as plt
+
+        pts = 500
+
+        poly = np.polyfit(self.get_time_values()[:pts], self.data['ang acc x'].values[:pts], 100)
+        fit_func = np.poly1d(poly)
+        plt.plot(self.get_time_values()[:pts], self.data['ang acc x'].values[:pts], label="actual")
+        plt.plot(self.get_time_values()[:pts], fit_func(self.get_time_values()[:pts]), label="reg")
+        plt.legend()
+        plt.show()
 
 class DynamicsDataset(torch.utils.data.Dataset):
 

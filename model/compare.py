@@ -19,8 +19,9 @@ import numpy as np
 import torch
 import torch.utils.data
 import pandas as pd
+import wandb
 
-def compare_(args, model):
+def compare_(args, model, wandb=False):
     print("--- Starting Network Evaluation! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
@@ -65,9 +66,9 @@ def compare_(args, model):
     # load device to either GPU or CPU depending on hardware
     model.to(device)
 
-    x = torch.tensor(comp_inputs)
+    x = torch.tensor(comp_inputs).to(device)
     x = torch.squeeze(x)
-    predAcc = model.forward(x.float()).detach().numpy()
+    predAcc = model.forward(x.float()).cpu().detach().numpy()
 
     actualAcc = DL.state_dot_values
 

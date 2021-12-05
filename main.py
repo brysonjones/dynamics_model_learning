@@ -36,6 +36,7 @@ if __name__ == "__main__":
     # perform main function
     if args.mode == "train":
         train_data = DL.load_selected_data(all_flights[:-5])
+        # train_data = DL.load_selected_data("2021-02-05-14-00-56")
         # train_data = DL.load_easy_data()
         train_dataset = DynamicsDataset(X=DL.get_state_data(),
                                         Y=DL.state_dot_values)
