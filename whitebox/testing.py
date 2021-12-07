@@ -59,3 +59,19 @@ totalAcc = np.concatenate((acc, angAcc), axis=1)
 totalNE = np.concatenate((accPred, angAccPred), axis=1)
 
 accCompare(timeVec, totalAcc, totalNE)
+
+
+#Recalculate with new values - should come out the same
+#print('Calculating kt (prop thrust coefficient)')
+#kt2 = getKt(state, accPred[:, 2], mass)
+#print('Using kt value ' + str(round(kt2, 5)))
+
+#print('Calculating inertia matrix')
+#Jxx2 = getJxx(state, angAccPred, kt2, sLen)
+#print('Using Jxx = ' + str(Jxx2))
+#Jzz2 = 2*Jxx2
+
+#print('Calculating prop moment coefficient')
+#km2 = getKm(state, angAccPred, Jzz2)
+#print('Using km = ' + str(km2))
+
