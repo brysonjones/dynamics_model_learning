@@ -1,5 +1,7 @@
 from dataLoader.DataLoader import DataLoader, DynamicsDataset
 import numpy as np
+import pandas as pd
+import os
 
 data_folder = "processed_data/"
 flights_file = "flights_info.txt"
@@ -18,7 +20,7 @@ saveFileName = "train_dataset.npz"
 DL = DataLoader(data_folder)
 
 # DL.load_selected_data(val_data)
-# DL.get_state_data()
-DL.load_selected_data(all_flights[:-5])
-# print(DL.get_time_values().shape)
-DL.saveData(saveFileName)
+col_names = pd.read_csv("processed_data/merged_2021-02-03-13-43-38_seg_1.csv").keys().values
+print(col_names)
+DL.load_selected_data(all_flights[:-5], cols_to_filter=col_names[1:4])
+# DL.saveData(saveFileName)

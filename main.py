@@ -35,7 +35,8 @@ if __name__ == "__main__":
 
     # perform main function
     if args.mode == "train":
-        train_data = DL.load_selected_data(all_flights[:-5])
+        col_names = pd.read_csv("processed_data/merged_2021-02-03-13-43-38_seg_1.csv").keys().values
+        train_data = DL.load_selected_data(all_flights[:-5], cols_to_filter=col_names[1:4])
         # train_data = DL.load_selected_data("2021-02-05-14-00-56")
         # train_data = DL.load_easy_data()
         train_dataset = DynamicsDataset(X=DL.get_state_data(),
