@@ -122,7 +122,7 @@ class DataLoader(object):
     # smoothed by applying moving average filter
     def smooth_angular_accels(self, data):
         for accel in data.keys().values[1:4]:
-            N = 25
+            N = 50
 
             new_data = np.convolve(data[accel].values, np.ones(N)/N, mode='valid')
             # account for convolution output being smaller than data length
