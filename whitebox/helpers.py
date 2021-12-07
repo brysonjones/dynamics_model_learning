@@ -1,5 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import matplotlib.pyplot as plt
 import math
 
 def getKt(stateMatrix, accz, mass):
@@ -12,6 +13,8 @@ def getKt(stateMatrix, accz, mass):
     
     kt, _, _, _ = np.linalg.lstsq(a, otherSide, rcond=-1)
 
+    #z = np.polyfit(a.flatten(), otherSide.flatten(), 1)
+    
     return kt[0,0] #the coefficient
     
 def getABlooperKt(stateMatrix, mass):
@@ -47,13 +50,8 @@ def getABkt(stateVec, mass):
     a = sum(motor) / mass
 
     #Prep the b terms
-    #b = Q^T*[0;0;-g][2] - (w x v)[2]
-    L = Lmat(quat)
-    R = Rmat(quat)
-    H = Hmat()
-    
-    Q = H.transpose() @ L @ R.transpose() @ H
-    
+    #b = Q^T*[0;0;-g][2] - (w x v)[2]    
+    Q = getRotMat(quat)
     gVec = np.zeros((3,1))
     gVec[2] = -9.81
     
@@ -69,6 +67,8 @@ def getJxx(stateMatrix, angAcc, kt, sLen):
     
     a, b = getABlooperJxx(stateMatrix, angAcc, kt, sLen)
 
+    #plt.scatter(a,b)
+    #plt.show()
     #solving for a*J_11 = b
     Jxx, _, _, _ = np.linalg.lstsq(a, b, rcond=-1)
     
@@ -107,10 +107,10 @@ def getABJxx(stateVec, angAccVec, kt, sLen):
     motor = stateVec[13:17]
     
     theta = math.pi/4
-    rotMat = np.zeros((3,3))
+    rotMat = np.zeros((3,3)) #for rotating from Bgiven to Bprincipal
     rotMat[0,0] = math.cos(theta)
-    rotMat[0,1] = -math.sin(theta)
-    rotMat[1,0] = math.sin(theta)
+    rotMat[0,1] = math.sin(theta)
+    rotMat[1,0] = -math.sin(theta)
     rotMat[1,1] = math.cos(theta)
     rotMat[2,2] = 1
 
@@ -123,12 +123,12 @@ def getABJxx(stateVec, angAccVec, kt, sLen):
     
     #Prep a
     #Comes from lines
-    #w\dot_1 = 1/J_11*s*kt*(u2-u4) - w_2w_3
-    #(w\dot_1 + w_2w_3)J_11 = s*kt*(u2-u4)
+    #w\dot_1 = 1/J_11*s*kt*(u4-u1) - w_2w_3
+    #(w\dot_1 + w_2w_3)J_11 = s*kt*(u4-u1)
     # ------  a  -----        ---  b ----
-    #w\dot_2 = 1/J_22*s*kt*(u3-u1) + w_1w_3
+    #w\dot_2 = 1/J_22*s*kt*(u3-u2) + w_1w_3
     #
-    #(w\dot_2 + w_1w_3)J_22 = s*kt*(u3-u1)
+    #(w\dot_2 - w_1w_3)J_22 = s*kt*(u3-u2)
     # ------  a  -----        ---  b ----
     #
     #Note: We're multiplying the J term across to make the regression easier
@@ -231,19 +231,15 @@ def doNewtEul(stateVec, mass, sLen, kt, km, J):
     omega = stateVec[10:13]
     motor = stateVec[13:17]
 
-    L = Lmat(quat)
-    R = Rmat(quat)
-    H = Hmat()
-    
     #First do acc
     F = np.zeros((3,1))
     F[2] = kt*sum(motor)
     #don't forget gravity
     g = 9.81;
     gVec = np.zeros((3,1))
-    gVec[2] = -g
+    gVec[2] = -g*mass
     
-    Q = H.transpose() @ L @ R.transpose() @ H
+    Q = getRotMat(quat)
     
     Fterm = F + Q.transpose() @ gVec
     crossTerm = np.cross(omega.reshape((1,3)), vel.reshape((1,3)))
@@ -270,11 +266,15 @@ def doNewtEul(stateVec, mass, sLen, kt, km, J):
     tauMat[2,3] = -km
     tauTerm = tauMat @ motor.reshape((4,1))
 
-    Jw = J @ omega.reshape((3,1))
-    crossTerm = np.cross(omega.reshape((1,3)), Jw.reshape((1,3)))
-    angAcc = np.linalg.inv(J) @ (tauTerm - crossTerm.reshape((3,1)))
+    omegaPrinc = rotMat @ omega.reshape((3,1))
+    Jw = J @ omegaPrinc
+    crossTerm = np.cross(omegaPrinc.reshape((1,3)), Jw.reshape((1,3)))
+    angAccPrinc = np.linalg.inv(J) @ (tauTerm - crossTerm.reshape((3,1)))
 
+    angAcc = rotMat.transpose() @ angAccPrinc
+    
     return acc, angAcc
+
 def hat(x):
     return np.array([[0, -x[2], x[1]], [x[2], 0, -x[0]], [-x[1], x[0], 0]])
 
@@ -313,3 +313,11 @@ def quat_dot(q, w):
 
     # np.vstack term is H from the notes [0; I(3)]
     return 0.5 * L @ np.vstack([np.zeros(3), np.eye(3)]) @ w
+
+def getRotMat(quat):
+    L = Lmat(quat)
+    R = Rmat(quat)
+    H = Hmat()
+    
+    Q = H.transpose() @ L @ R.transpose() @ H
+    return Q
