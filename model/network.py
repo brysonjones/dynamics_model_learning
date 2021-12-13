@@ -17,6 +17,7 @@ def get_model(args, parameters, D_in, D_out):
         control_hidden = [128, 128, 128, 128, 128, 128]
         model = LagrangianNeuralNetwork(D_in, hidden_list, control_hidden, D_out)
     elif args.model == "FCN":
+        # hidden_list = [15000]
         hidden_list = [15000]
         model = FullyConnectedNetwork(D_in, hidden_list, D_out)
     elif args.model == "NewtonEuler":
@@ -56,8 +57,8 @@ class LagrangianNeuralNetwork(torch.nn.Module):
         ### Control Force Network ###
         # input layer - Lagrange
         self.external_force_layers.append(torch.nn.Linear(D_in, control_hidden[0]))
-        # self.external_force_layers.append(torch.nn.LeakyReLU(.025))
-        self.external_force_layers.append(torch.nn.ReLU())
+        self.external_force_layers.append(torch.nn.LeakyReLU(.025))
+        # self.external_force_layers.append(torch.nn.ReLU())
         # add all hidden layers
         for i in range(0, len(control_hidden) - 1):
             self.external_force_layers.append(torch.nn.Linear(control_hidden[i], control_hidden[i + 1]))
@@ -114,11 +115,11 @@ class FullyConnectedNetwork(torch.nn.Module):
 
         # input layer
         self.model_layers.append(torch.nn.Linear(D_in, hidden_list[0]))
-        self.model_layers.append(torch.nn.LeakyReLU())
+        self.model_layers.append(torch.nn.ReLU())
         # add all hidden layers
         for i in range(1, len(hidden_list)):
             self.model_layers.append(torch.nn.Linear(hidden_list[i-1], hidden_list[i]))
-            self.model_layers.append(torch.nn.LeakyReLU())
+            self.model_layers.append(torch.nn.ReLU())
 
         # output layer
         self.model_layers.append(torch.nn.Linear(hidden_list[-1], D_out))

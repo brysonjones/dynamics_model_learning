@@ -19,8 +19,9 @@ import numpy as np
 import torch
 import torch.utils.data
 import pandas as pd
+import wandb
 
-def compare_(args, model):
+def compare_(args, model, wandb=False):
     print("--- Starting Network Evaluation! ---")
     # determine device
     print("--- Checking for CUDA Device... ---")
@@ -39,7 +40,10 @@ def compare_(args, model):
     print("--- Loading validation data... ---")
     print('Loading data')
     DL = DataLoader('processed_data')
-    DL.load_selected_data('2021-02-05-14-00-56')
+    col_names = pd.read_csv("processed_data/merged_2021-02-03-13-43-38_seg_1.csv").keys().values
+    DL.load_selected_data('2021-02-05-14-00-56', cols_to_filter=col_names[1:4])
+    # DL.load_selected_data('2021-02-03-17-14-47', cols_to_filter=col_names[1:4])
+    # DL.load_selected_data("2021-02-23-22-54-17", cols_to_filter=col_names[1:4])
     DL.saveData('compare_dataset.npz')
     comp_dataset = np.load('compare_dataset.npz')
     comp_inputs = comp_dataset["input"]
@@ -65,9 +69,9 @@ def compare_(args, model):
     # load device to either GPU or CPU depending on hardware
     model.to(device)
 
-    x = torch.tensor(comp_inputs)
+    x = torch.tensor(comp_inputs).to(device)
     x = torch.squeeze(x)
-    predAcc = model.forward(x.float()).detach().numpy()
+    predAcc = model.forward(x.float()).cpu().detach().numpy()
 
     actualAcc = DL.state_dot_values
 
