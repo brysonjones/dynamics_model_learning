@@ -18,7 +18,7 @@ import pandas as pd
 
 import wandb
 
-def train_(args, model, hyperparams, dataloader):
+def train_(args, model, hyperparams, dataloader, val_dataloader=None):
 
     if args.wandb:
         wandb.init(project="ML_sys-id", entity="schwartz_code")
@@ -35,6 +35,9 @@ def train_(args, model, hyperparams, dataloader):
     print("--- Checking for CUDA Device... ---")
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if use_cuda else "cpu")
+
+    if use_cuda:
+        torch.cuda.empty_cache()
 
     # set up training parameters
     learning_rate = hyperparams["learning_rate"]
@@ -109,14 +112,39 @@ def train_(args, model, hyperparams, dataloader):
             if batch_idx % 5000 == 0:
                 print("--- Saving weights ---")
                 # save weights after each epoch
+                model.to("cpu")
                 torch.save({
                     'epoch': epoch,
                     'model_state_dict': model.state_dict(),
                     'optimizer_state_dict': optimizer.state_dict(),
                 }, "model_weights.pth")
+                model.to(device)
 
         scheduler.step()
-        if args.wandb:
-            wandb.log({"average loss": average_training_loss})
+
+        if val_dataloader is None:
+            if args.wandb:
+                wandb.log({"average loss": average_training_loss})
+        else:
+            val_loss = 0
+            for batch_idx, (x, y) in enumerate(val_dataloader):
+                x, y = x.to(device), y.to(device)
+
+                x = torch.squeeze(x)
+                with torch.no_grad():
+                    y_pred = model.forward(x.float())
+
+                    if(y_pred.size() != y.float().size()):
+                        loss = loss_fcn(y_pred.unsqueeze(0), y.float())
+                    else:
+                        loss = loss_fcn(y_pred, y.float())
+
+                    loss_data = pd.DataFrame(data=[loss.cpu().detach().numpy()],
+                                             columns=["loss"])
+
+                val_loss += loss / len(val_dataloader)
+            if args.wandb:
+                wandb.log({"average loss": val_loss})
+            print("\tValid loss:", val_loss)
 
     print('end')

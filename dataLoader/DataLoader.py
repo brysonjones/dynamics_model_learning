@@ -41,6 +41,8 @@ class DataLoader(object):
         self.linear_oscillations = ["2021-02-03-16-10-37", "2021-02-03-16-12-22", "2021-02-03-16-45-38", "2021-02-03-16-54-28", "2021-02-18-16-41-41",
                                    "2021-02-18-16-43-54", "2021-02-18-16-47-02", "2021-02-18-16-48-24", "2021-02-18-16-53-35", "2021-02-18-16-55-00"]
 
+        self.dt = 1/400 # [sec] (400 Hz, from paper)
+
     def load_easy_data(self):
         self.data = None
 
@@ -99,13 +101,16 @@ class DataLoader(object):
         return self.data['t'].values
 
     def get_state_data(self):
-        return self.data[self.state_columns].values
+        rpms_squared = self.data[self.state_columns[-4:]].values**2
+        # scale down rpms so network doesn't oversaturate and fill with nans
+        rpms_squared *= np.max(self.data[self.state_columns[-4:]].values) / np.max(rpms_squared)
+        vals = np.hstack([self.data[self.state_columns].values, rpms_squared])
+        return vals
 
     def get_control_inputs(self):
         return self.data[self.motor_speed_columns].values
 
     def get_des_rpm_values(self):
-        dt = 0.001 # [sec] (1 kHz, from paper)
         rpm_dot_vals = (np.diff(self.data[self.motor_speed_columns].values, axis=0)) / dt
         # copy last time step so rpm_dot_vals is same length as data
         rpm_dot_vals = np.vstack([rpm_dot_vals, rpm_dot_vals[-1,:]])
@@ -116,6 +121,9 @@ class DataLoader(object):
         return self.data['vbat'].values
 
     def calculate_state_dot_values(self):
+        # actual_ang_vels = (self.data[['ang vel x', 'ang vel y', 'ang vel z']].values[1:] - self.data[['ang vel x', 'ang vel y', 'ang vel z']].values[:-1]) / self.dt
+        # actual_ang_vels = np.vstack([np.array([0.0, 0.0, 0.0]), actual_ang_vels])
+        # self.state_dot_values = np.hstack([ self.data[['acc x', 'acc y', 'acc z']].values, actual_ang_vels])
         self.state_dot_values = self.data[['acc x', 'acc y', 'acc z', 'ang acc x', 'ang acc y', 'ang acc z']].values
 
     def saveData(self, filePath):
