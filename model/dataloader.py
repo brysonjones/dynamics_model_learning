@@ -1,6 +1,7 @@
 
 import torch
 import torch.utils.data
+import numpy as np
 
 
 class DynamicsDataset(torch.utils.data.Dataset):
@@ -32,10 +33,8 @@ class DynamicsDataset(torch.utils.data.Dataset):
         batch_y = [y for x, y in batch]
 
         # Convert batched data and labels to tensors
-        batch_x = torch.as_tensor(batch_x)
-        batch_y = torch.as_tensor(batch_y)
+        batch_x = torch.as_tensor(np.asarray(batch_x))
+        batch_y = torch.as_tensor(np.asarray(batch_y))
 
         # Return batched data and labels
         return batch_x, batch_y
-
-

@@ -17,7 +17,8 @@ def get_model(args, parameters, D_in, D_out):
         control_hidden = [128, 128, 128, 128, 128, 128]
         model = LagrangianNeuralNetwork(D_in, hidden_list, control_hidden, D_out)
     elif args.model == "FCN":
-        hidden_list = [5000]
+        # hidden_list = [15000]
+        hidden_list = [1024, 512, 512]
         model = FullyConnectedNetwork(D_in, hidden_list, D_out)
     elif args.model == "NewtonEuler":
         pass
@@ -56,8 +57,8 @@ class LagrangianNeuralNetwork(torch.nn.Module):
         ### Control Force Network ###
         # input layer - Lagrange
         self.external_force_layers.append(torch.nn.Linear(D_in, control_hidden[0]))
-        # self.external_force_layers.append(torch.nn.LeakyReLU(.025))
-        self.external_force_layers.append(torch.nn.ReLU())
+        self.external_force_layers.append(torch.nn.LeakyReLU(.025))
+        # self.external_force_layers.append(torch.nn.ReLU())
         # add all hidden layers
         for i in range(0, len(control_hidden) - 1):
             self.external_force_layers.append(torch.nn.Linear(control_hidden[i], control_hidden[i + 1]))
