@@ -142,9 +142,9 @@ class DataLoader(object):
                 new_data = np.insert(new_data, i, old_datum)
 
             #adding estimates for last few datapoints
-            for i in range(self.N//2):
+            for i in range(self.N//2, 0, -1):
                 old_datum = np.sum(data[col].values[-i-1:]) / (i+1)
-                new_data = np.insert(new_data, -1, old_datum)
+                new_data = np.append(new_data, old_datum)
 
             if plot_filtering:
                 t_vals = data['t'].values

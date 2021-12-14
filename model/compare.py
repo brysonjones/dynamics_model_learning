@@ -43,8 +43,8 @@ def compare_(args, model, wandb=False):
     col_names = pd.read_csv("processed_data/merged_2021-02-03-13-43-38_seg_1.csv").keys().values
     print(col_names)
     # DL.load_selected_data('2021-02-05-14-00-56', cols_to_filter=col_names[1:4]) # from train set
-    DL.load_selected_data('2021-02-03-17-14-47', cols_to_filter=col_names[1:4])
-    # DL.load_selected_data("2021-02-23-22-54-17", cols_to_filter=col_names[1:4]) # from val set
+    # DL.load_selected_data('2021-02-03-17-14-47', cols_to_filter=col_names[1:4])
+    DL.load_selected_data("2021-02-23-22-54-17", cols_to_filter=col_names[1:4]) # from val set
     DL.saveData('compare_dataset.npz')
     comp_dataset = np.load('compare_dataset.npz')
     comp_inputs = comp_dataset["input"]
