@@ -15,7 +15,7 @@ from dataLoader.DataLoader import DataLoader
 DL = DataLoader('../processed_data')
 
 print('Loading data')
-DL.load_selected_data('2021-02-05-14-00-56')#"2021-02-03-16-10-37")
+DL.load_selected_data('2021-02-05-14-19-34')# '2021-02-05-14-00-56') #"2021-02-03-16-10-37")
 timeVec = DL.get_time_values()
 state   = DL.get_state_data()
 accx = DL.data['acc x'].values
