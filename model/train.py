@@ -21,7 +21,7 @@ import wandb
 def train_(args, model, hyperparams, dataloader, val_dataloader=None):
 
     if args.wandb:
-        wandb.init(project="ML_sys-id", entity="schwartz_code")
+        wandb.init(project="ML_sys-id_v2", entity="schwartz_code")
 
         wandb.config = {
           "learning_rate": hyperparams["learning_rate"],

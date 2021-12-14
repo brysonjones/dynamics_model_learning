@@ -18,7 +18,7 @@ def get_model(args, parameters, D_in, D_out):
         model = LagrangianNeuralNetwork(D_in, hidden_list, control_hidden, D_out)
     elif args.model == "FCN":
         # hidden_list = [15000]
-        hidden_list = [15000]
+        hidden_list = [1024, 512, 512]
         model = FullyConnectedNetwork(D_in, hidden_list, D_out)
     elif args.model == "NewtonEuler":
         pass

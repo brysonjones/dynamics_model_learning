@@ -130,14 +130,31 @@ class DataLoader(object):
         np.savez(filePath, input=self.get_state_data(), labels=self.state_dot_values, control_inputs=self.get_control_inputs())
 
     # smoothed by applying moving average filter
-    def smooth_angular_accels(self, data, cols_to_filter):
+    def smooth_angular_accels(self, data, cols_to_filter, plot_filtering=False):
         for col in cols_to_filter:
 
             new_data = np.convolve(data[col].values, np.ones(self.N)/self.N, mode='valid')
+
             # account for convolution output being smaller than data length
-            for i in range(self.N-1):
+            #adding estimates for first few datapoints
+            for i in range(self.N//2-1):
                 old_datum = np.sum(data[col].values[:i+1]) / (i+1)
                 new_data = np.insert(new_data, i, old_datum)
+
+            #adding estimates for last few datapoints
+            for i in range(self.N//2):
+                old_datum = np.sum(data[col].values[-i-1:]) / (i+1)
+                new_data = np.insert(new_data, -1, old_datum)
+
+            if plot_filtering:
+                t_vals = data['t'].values
+                import matplotlib.pyplot as plt
+                plt.plot(t_vals, data[col].values, label='Pre-filtering')
+                plt.plot(t_vals, new_data, label='Post-filtering')
+                plt.legend()
+                plt.xlabel("Time [sec]")
+                plt.ylabel("Angular Acceleration [rad/sec^2]")
+                plt.show()
 
             pd_update = pd.DataFrame({col: new_data})
             data.update(pd_update)
