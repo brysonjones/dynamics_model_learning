@@ -57,8 +57,8 @@ class LagrangianNeuralNetwork(torch.nn.Module):
         ### Control Force Network ###
         # input layer - Lagrange
         self.external_force_layers.append(torch.nn.Linear(D_in, control_hidden[0]))
-        self.external_force_layers.append(torch.nn.LeakyReLU(.025))
-        # self.external_force_layers.append(torch.nn.ReLU())
+        # self.external_force_layers.append(torch.nn.LeakyReLU(.025))
+        self.external_force_layers.append(torch.nn.ReLU())
         # add all hidden layers
         for i in range(0, len(control_hidden) - 1):
             self.external_force_layers.append(torch.nn.Linear(control_hidden[i], control_hidden[i + 1]))
