@@ -106,13 +106,7 @@ def getABJxx(stateVec, angAccVec, kt, sLen):
     omega = stateVec[10:13]
     motor = stateVec[13:17]
     
-    theta = math.pi/4
-    rotMat = np.zeros((3,3)) #for rotating from Bgiven to Bprincipal
-    rotMat[0,0] = math.cos(theta)
-    rotMat[0,1] = math.sin(theta)
-    rotMat[1,0] = -math.sin(theta)
-    rotMat[1,1] = math.cos(theta)
-    rotMat[2,2] = 1
+    rotMat = getPrincRotMat()
 
     angAccVecPrincipal = rotMat @ angAccVec.reshape((3,1))
     
@@ -192,7 +186,7 @@ def getABkm(stateVec, angAccVec, Jzz):
     # -- b --   -------   a -------
     
     #Prep a
-    a = 1/Jzz * (motor[0] - motor[1] - motor[2] + motor[3])
+    a = 1/Jzz * (-motor[0] + motor[1] + motor[2] - motor[3])
 
     #Prep the b terms
     #b = angAccZ
@@ -247,21 +241,15 @@ def doNewtEul(stateVec, mass, sLen, kt, km, J):
     acc = 1/mass * Fterm - crossTerm.reshape((3,1))
     
     #And angular acc
-    theta = math.pi/4
-    rotMat = np.zeros((3,3))
-    rotMat[0,0] = math.cos(theta)
-    rotMat[0,1] = -math.sin(theta)
-    rotMat[1,0] = math.sin(theta)
-    rotMat[1,1] = math.cos(theta)
-    rotMat[2,2] = 1
+    rotMat = getPrincRotMat()
     
     tauMat = np.zeros((3,4))
-    tauMat[0,1] = sLen * kt
-    tauMat[0,3] = -sLen * kt
-    tauMat[1,0] = -sLen * kt
+    tauMat[0,0] = -sLen * kt
+    tauMat[0,3] = sLen * kt
+    tauMat[1,1] = -sLen * kt
     tauMat[1,2] = sLen * kt
-    tauMat[2,0] = km
-    tauMat[2,1] = -km
+    tauMat[2,0] = -km
+    tauMat[2,1] = km
     tauMat[2,2] = km
     tauMat[2,3] = -km
     tauTerm = tauMat @ motor.reshape((4,1))
@@ -321,3 +309,15 @@ def getRotMat(quat):
     
     Q = H.transpose() @ L @ R.transpose() @ H
     return Q
+
+def getPrincRotMat():
+    # For rotating from body frame to principal frame
+    # Just to standardize since this is done twice
+    theta = math.pi/4
+    rotMat = np.zeros((3,3)) #for rotating from Bgiven to Bprincipal
+    rotMat[0,0] = math.cos(theta)
+    rotMat[0,1] = -math.sin(theta)
+    rotMat[1,0] = math.sin(theta)
+    rotMat[1,1] = math.cos(theta)
+    rotMat[2,2] = 1
+    return rotMat
