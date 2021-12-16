@@ -18,5 +18,6 @@ end
 
 set(gca, 'YScale', 'log')
 ylabel('Next State MSE')
+ylim([1e-5, 1e-2])
 title('Next State MSE for White and Black Box')
 legend('White Box', 'Black Box', 'Location', 'Southwest')
