@@ -139,6 +139,7 @@ plot(t, acc_pred(:, 1), 'g')
 xlabel('t')
 ylabel('acc')
 title('acc x')
+legend('True', 'Predicted')
 
 subplot(2,3,2)
 hold all
@@ -147,6 +148,7 @@ plot(t, acc_pred(:, 2), 'g')
 xlabel('t')
 ylabel('acc')
 title('acc y')
+legend('True', 'Predicted')
 
 subplot(2,3,3)
 hold all
@@ -155,6 +157,7 @@ plot(t, acc_pred(:, 3), 'g')
 xlabel('t')
 ylabel('acc')
 title('acc z')
+legend('True', 'Predicted')
 
 %
 subplot(2,3,4)
@@ -164,6 +167,7 @@ plot(t, angAcc_pred(:, 1), 'g')
 xlabel('t')
 ylabel('angAcc')
 title('angAcc x')
+legend('True', 'Predicted')
 
 subplot(2,3,5)
 hold all
@@ -172,6 +176,7 @@ plot(t, angAcc_pred(:, 2), 'g')
 xlabel('t')
 ylabel('angAcc')
 title('angAcc y')
+legend('True', 'Predicted')
 
 subplot(2,3,6)
 hold all
@@ -180,4 +185,5 @@ plot(t, angAcc_pred(:, 3), 'g')
 xlabel('t')
 ylabel('angAcc')
 title('angAcc z')
+legend('True', 'Predicted')
 end
