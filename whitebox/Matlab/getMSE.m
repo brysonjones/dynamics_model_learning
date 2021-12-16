@@ -24,11 +24,11 @@ errors = (X-Xreal).^2;
 mses = mean(errors, 2);
 transTerms = [1, 2, 3, 8, 9, 10];
 rotTerms = [4, 5, 6, 7, 11, 12, 13];
-translationalMSE = sum(mses(transTerms));
-rotationalMSE = sum(mses(rotTerms));
+translationalMSE = mean(mses(transTerms));
+rotationalMSE = mean(mses(rotTerms));
 
-totalMSE = sum(mses);
+totalMSE = (3*translationalMSE + 4*rotationalMSE)/7;
 
-fprintf('Translational MSE: %f\n', translationalMSE);
-fprintf('Rotational MSE   : %f\n', rotationalMSE);
-fprintf('Total MSE        : %f\n', totalMSE);
+fprintf('Translational MSE: %g\n', translationalMSE);
+fprintf('Rotational MSE   : %g\n', rotationalMSE);
+fprintf('Total MSE        : %g\n', totalMSE);
