@@ -56,7 +56,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
     loss_data = pd.DataFrame(data=["Epoch Num", "Average Loss"]).T
     with open("training_loss_data.csv", 'w') as file:
         loss_data.to_csv(file, header=False)
-    val_data = pd.DataFrame(data=["Epoch Num", "Average Error"]).T
+    val_data = pd.DataFrame(data=["Epoch Num", "Average Error", "Average Trans Error", "Average Quat Error"]).T
     with open("val_loss_data.csv", 'w') as file:
         val_data.to_csv(file, header=False)
 
@@ -85,7 +85,7 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
             scaler.scale(loss).backward()
 
             # clip gradients
-            torch.nn.utils.clip_grad_norm_(model.parameters(), 0.25)
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
 
             # run optimization step based on backwards pass
             scaler.step(optimizer)
@@ -113,8 +113,8 @@ def train_(args, model, hyperparams, train_dataloader, eval_dataloader):
         with open("training_loss_data.csv", 'a') as file:
             loss_data.to_csv(file, header=False)
 
-        avg_val_error = eval_(model, eval_dataloader)
-        val_data = pd.DataFrame(data=[epoch, avg_val_error]).T
+        avg_trans_validation_error, avg_quat_validation_error, avg_val_error = eval_(model, eval_dataloader)
+        val_data = pd.DataFrame(data=[epoch, avg_val_error, avg_trans_validation_error, avg_quat_validation_error]).T
         with open("val_loss_data.csv", 'a') as file:
             val_data.to_csv(file, header=False)
 

@@ -10,11 +10,8 @@ import numpy as np
 import torch.utils.data
 import pandas as pd
 
-def simulate_(DELN, q1, q2, u_array):
-    N = u_array.shape[0]
-    qhist = np.zeros((N, 7))
-    qhist[0, :] = q1
-    qhist[1, :] = q2
+def predict_next_state(DELN, q1, q2, u1, u2, u3):
 
-    for i in range(2, N):
-        qhist[:, i] = DELN.step(qhist[i-2:i, :], u_array[i-2:i+1, :])
+    q_next = DELN.step(q1, q2, u1, u2, u3)
+
+

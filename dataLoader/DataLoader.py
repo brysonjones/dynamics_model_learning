@@ -24,6 +24,8 @@ class DataLoader(object):
         self.motor_time_constant = 1 / 0.033 # motor constant k where rpm_dot = k*(rpm_des - rpm_curr)
         # this is from page 7 of the NeuroBEM paper
 
+        self.N = 100  # number of adjacent data points averaged in moving average filter
+
         self.state_columns = ['pos x', 'pos y', 'pos z', 'vel x', 'vel y', 'vel z', 'quat x',
                               'quat y', 'quat z', 'quat w', 'ang vel x', 'ang vel y',
                               'ang vel z', 'mot 1', 'mot 2', 'mot 3', 'mot 4']
@@ -63,7 +65,7 @@ class DataLoader(object):
     def get_column_names(self):
         return self.data.keys().values
 
-    def load_selected_data(self, selected_data):
+    def load_selected_data(self, selected_data, cols_to_filter=None):
         self.selected_data = selected_data
 
         self.data = None
@@ -75,9 +77,16 @@ class DataLoader(object):
         for f in flights:
             if f[7:-10] in selected_data:
                 if self.data is None:
-                    self.data = pd.read_csv(os.path.join(self.data_path, f))
+                    if cols_to_filter is not None:
+                        self.data = self.smooth_angular_accels(pd.read_csv(os.path.join(self.data_path, f)), cols_to_filter)
+                    else:
+                        self.data = pd.read_csv(os.path.join(self.data_path, f))
                 else:
-                    self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
+                    if cols_to_filter is not None:
+                        self.data = pd.concat([self.data, self.smooth_angular_accels(pd.read_csv(os.path.join(self.data_path, f)), cols_to_filter)])
+                    else:
+                        self.data = pd.concat([self.data, pd.read_csv(os.path.join(self.data_path, f))])
+
 
         self.motor_speed_columns = self.get_column_names()[-9:-5]
         self.motor_derivative_columns = self.get_column_names()[-5:-1]
@@ -132,6 +141,36 @@ class DataLoader(object):
     def saveData(self, filePath):
         np.savez(filePath, input=self.get_state_data(), labels=self.state_dot_values, control_inputs=self.get_control_inputs())
 
+    # smoothed by applying moving average filter
+    def smooth_angular_accels(self, data, cols_to_filter):
+        for col in cols_to_filter:
+
+            new_data = np.convolve(data[col].values, np.ones(self.N)/self.N, mode='valid')
+            # account for convolution output being smaller than data length
+            for i in range(self.N-1):
+                old_datum = np.sum(data[col].values[:i+1]) / (i+1)
+                new_data = np.insert(new_data, i, old_datum)
+
+            pd_update = pd.DataFrame({col: new_data})
+            data.update(pd_update)
+
+        return data
+
+    def set_data_filter_width(self, width):
+        self.N = width
+
+    def poly_fit_angular_accelerations(self):
+        import matplotlib.pyplot as plt
+
+        pts = 500
+
+        poly = np.polyfit(self.get_time_values()[:pts], self.data['ang acc x'].values[:pts], 100)
+        fit_func = np.poly1d(poly)
+        plt.plot(self.get_time_values()[:pts], self.data['ang acc x'].values[:pts], label="actual")
+        plt.plot(self.get_time_values()[:pts], fit_func(self.get_time_values()[:pts]), label="reg")
+        plt.legend()
+        plt.show()
+
 class DynamicsDataset(torch.utils.data.Dataset):
 
     def __init__(self, X, Y):
@@ -150,7 +189,7 @@ class DynamicsDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
 
         ### Return data at index pair with context and label at index pair (1 line)
-        return self.X[index, :], self.Y[index, :]
+        return torch.FloatTensor(self.X[index, :]), torch.FloatTensor(self.Y[index, :])
 
     @staticmethod
     def collate_fn(batch):

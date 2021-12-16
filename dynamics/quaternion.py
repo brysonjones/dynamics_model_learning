@@ -23,7 +23,6 @@ def R(q):
     return torch.vstack((torch.hstack((q[0], -q[1:4])),
                         torch.hstack((q[1:4], q[0]*torch.eye(3) - hat(q[1:4])))))
 
-
 def G(q):
     # attitude jacobian
     return L(q)@H
